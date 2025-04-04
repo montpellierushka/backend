@@ -4,7 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Services\TelegramService;
 use Illuminate\Http\Request;
-use Telegram\Bot\Laravel\Facades\Telegram;
+use Telegram\Bot\Objects\Update;
 
 class TelegramController extends Controller
 {
@@ -17,22 +17,28 @@ class TelegramController extends Controller
 
     public function webhook(Request $request)
     {
-        $update = Telegram::commandsHandler(true);
+        $update = new Update($request->all());
         return $this->telegramService->handleWebhook($update);
     }
 
     public function setWebhook()
     {
-        $response = Telegram::setWebhook([
-            'url' => config('services.telegram.webhook_url')
+        $webhookUrl = config('services.telegram.webhook_url');
+        $response = $this->telegramService->setWebhook($webhookUrl);
+        
+        return response()->json([
+            'success' => $response->isOk(),
+            'message' => $response->getDescription()
         ]);
-
-        return response()->json($response);
     }
 
     public function removeWebhook()
     {
-        $response = Telegram::removeWebhook();
-        return response()->json($response);
+        $response = $this->telegramService->removeWebhook();
+        
+        return response()->json([
+            'success' => $response->isOk(),
+            'message' => $response->getDescription()
+        ]);
     }
 } 

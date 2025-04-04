@@ -144,4 +144,16 @@ class TelegramService
             'text' => 'Список доступных маршрутов будет здесь'
         ]);
     }
+
+    public function setWebhook($url)
+    {
+        return $this->telegram->setWebhook([
+            'url' => $url
+        ]);
+    }
+
+    public function removeWebhook()
+    {
+        return $this->telegram->removeWebhook();
+    }
 } 

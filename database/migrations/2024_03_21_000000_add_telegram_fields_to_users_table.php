@@ -8,21 +8,16 @@ return new class extends Migration
 {
     public function up()
     {
-        Schema::create('users', function (Blueprint $table) {
-            $table->id();
-            $table->string('name');
-            $table->string('email')->unique();
-            $table->timestamp('email_verified_at')->nullable();
-            $table->string('password');
+        Schema::table('users', function (Blueprint $table) {
             $table->string('telegram_id')->nullable()->unique();
             $table->string('telegram_username')->nullable();
-            $table->rememberToken();
-            $table->timestamps();
         });
     }
 
     public function down()
     {
-        Schema::dropIfExists('users');
+        Schema::table('users', function (Blueprint $table) {
+            $table->dropColumn(['telegram_id', 'telegram_username']);
+        });
     }
 }; 
