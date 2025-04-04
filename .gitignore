@@ -3,6 +3,7 @@
 /vendor
 
 # Файлы окружения
+.env
 .env.*
 !.env.example
 
