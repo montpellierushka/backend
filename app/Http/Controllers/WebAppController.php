@@ -73,9 +73,16 @@ class WebAppController extends Controller
                 ]
             );
 
+            // Добавляем URL аватара, если он есть
+            $userData['photo_url'] = $userData['photo_url'] ?? null;
+
             return response()->json([
                 'success' => true,
-                'data' => $user
+                'data' => array_merge($user->toArray(), [
+                    'photo_url' => $userData['photo_url'],
+                    'is_bot' => $userData['is_bot'] ?? false,
+                    'language_code' => $userData['language_code'] ?? null,
+                ])
             ]);
         } catch (\Exception $e) {
             Log::error('Error getting user info: ' . $e->getMessage());

@@ -398,6 +398,13 @@ class TelegramService
                         ]
                     ];
 
+                    // Отправляем ответ на callback-запрос
+                    Http::post("{$this->apiUrl}/answerCallbackQuery", [
+                        'callback_query_id' => $callbackQuery['id'],
+                        'text' => 'Открываю справку...'
+                    ]);
+
+                    // Отправляем новое сообщение со справкой
                     $this->sendMessage($message['chat']['id'], 
                         "📝 Доступные команды:\n\n".
                         "/start - Начать работу с ботом\n".
@@ -407,14 +414,28 @@ class TelegramService
                         ['reply_markup' => json_encode($keyboard)]
                     );
                     break;
-            }
 
-            // Отправляем ответ Telegram о успешной обработке callback-запроса
-            Http::post("{$this->apiUrl}/answerCallbackQuery", [
-                'callback_query_id' => $callbackQuery['id']
-            ]);
+                default:
+                    // Отправляем ответ на неизвестный callback-запрос
+                    Http::post("{$this->apiUrl}/answerCallbackQuery", [
+                        'callback_query_id' => $callbackQuery['id'],
+                        'text' => 'Неизвестная команда'
+                    ]);
+                    break;
+            }
         } catch (\Exception $e) {
             Log::error('Error handling callback query: ' . $e->getMessage());
+            
+            // Отправляем ответ об ошибке
+            try {
+                Http::post("{$this->apiUrl}/answerCallbackQuery", [
+                    'callback_query_id' => $callbackQuery['id'],
+                    'text' => 'Произошла ошибка',
+                    'show_alert' => true
+                ]);
+            } catch (\Exception $e) {
+                Log::error('Error sending callback answer: ' . $e->getMessage());
+            }
         }
     }
 
