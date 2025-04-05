@@ -1,6 +1,6 @@
 FROM composer:2.6 as composer
 WORKDIR /app
-COPY composer.json composer.lock ./
+COPY . .
 RUN composer install --no-dev --optimize-autoloader
 
 FROM php:8.2-fpm
@@ -24,8 +24,7 @@ RUN curl -sL https://deb.nodesource.com/setup_18.x | bash - \
     && npm install -g npm
 
 # Копирование файлов из composer stage
-COPY --from=composer /app/vendor ./vendor
-COPY . .
+COPY --from=composer /app /app
 
 # Установка прав
 RUN chown -R www-data:www-data /app/storage /app/bootstrap/cache \
