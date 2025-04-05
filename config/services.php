@@ -44,9 +44,8 @@ return [
 
     'telegram' => [
         'bot_token' => env('TELEGRAM_BOT_TOKEN'),
-        'webhook_url' => env('TELEGRAM_WEBHOOK_URL'),
         'bot_username' => env('TELEGRAM_BOT_USERNAME'),
-        'web_app_url' => env('TELEGRAM_WEB_APP_URL'),
+        'webhook_url' => env('TELEGRAM_WEBHOOK_URL'),
     ],
 
 ];

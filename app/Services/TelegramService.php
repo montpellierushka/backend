@@ -7,16 +7,25 @@ use App\Models\Message;
 use App\Models\TelegramUser;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Hash;
 
 class TelegramService
 {
     protected string $botToken;
     protected string $apiUrl;
+    protected string $botUsername;
+    protected string $webhookUrl;
 
     public function __construct()
     {
         $this->botToken = config('services.telegram.bot_token');
         $this->apiUrl = "https://api.telegram.org/bot{$this->botToken}";
+        $this->botUsername = config('services.telegram.bot_username');
+        $this->webhookUrl = config('services.telegram.webhook_url');
+
+        if (empty($this->botToken)) {
+            Log::error('Telegram bot token is not set');
+        }
     }
 
     /**
@@ -24,6 +33,13 @@ class TelegramService
      */
     public function sendMessage(int $chatId, string $text, array $options = []): array
     {
+        if (empty($this->botToken)) {
+            return [
+                'success' => false,
+                'message' => 'Bot token is not set'
+            ];
+        }
+
         try {
             $response = Http::post("{$this->apiUrl}/sendMessage", array_merge([
                 'chat_id' => $chatId,
@@ -31,43 +47,67 @@ class TelegramService
                 'parse_mode' => 'HTML',
             ], $options));
 
-            if ($response->successful()) {
-                return $response->json();
+            $result = $response->json();
+
+            if ($result['ok']) {
+                return [
+                    'success' => true,
+                    'message' => 'Message sent successfully'
+                ];
             }
 
-            Log::error('Telegram API Error', [
-                'status' => $response->status(),
-                'body' => $response->body(),
-            ]);
-
-            return [];
+            Log::error('Failed to send message', ['error' => $result['description']]);
+            return [
+                'success' => false,
+                'message' => $result['description']
+            ];
         } catch (\Exception $e) {
-            Log::error('Telegram Service Error', [
-                'message' => $e->getMessage(),
-                'trace' => $e->getTraceAsString(),
-            ]);
-
-            return [];
+            Log::error('Error sending message: ' . $e->getMessage());
+            return [
+                'success' => false,
+                'message' => 'Error sending message'
+            ];
         }
     }
 
     /**
      * Установка вебхука
      */
-    public function setWebhook(string $url): array
+    public function setWebhook(): array
     {
+        if (empty($this->botToken)) {
+            return [
+                'success' => false,
+                'message' => 'Bot token is not set'
+            ];
+        }
+
         try {
             $response = Http::post("{$this->apiUrl}/setWebhook", [
-                'url' => $url,
+                'url' => $this->webhookUrl
             ]);
 
-            return $response->json();
+            $result = $response->json();
+
+            if ($result['ok']) {
+                Log::info('Webhook set successfully', ['url' => $this->webhookUrl]);
+                return [
+                    'success' => true,
+                    'message' => 'Webhook set successfully'
+                ];
+            }
+
+            Log::error('Failed to set webhook', ['error' => $result['description']]);
+            return [
+                'success' => false,
+                'message' => $result['description']
+            ];
         } catch (\Exception $e) {
-            Log::error('Set Webhook Error', [
-                'message' => $e->getMessage(),
-            ]);
-
-            return ['ok' => false, 'error' => $e->getMessage()];
+            Log::error('Error setting webhook: ' . $e->getMessage());
+            return [
+                'success' => false,
+                'message' => 'Error setting webhook'
+            ];
         }
     }
 
@@ -244,6 +284,107 @@ class TelegramService
             default:
                 $this->sendMessage($chat->telegram_id, 'Неизвестная команда. Используйте /help для получения списка команд.');
                 break;
+        }
+    }
+
+    public function webhook($update)
+    {
+        try {
+            if (isset($update['message'])) {
+                $this->handleMessage($update['message']);
+            } elseif (isset($update['callback_query'])) {
+                $this->handleCallbackQuery($update['callback_query']);
+            }
+
+            return ['ok' => true];
+        } catch (\Exception $e) {
+            Log::error('Webhook error: ' . $e->getMessage());
+            return ['ok' => false];
+        }
+    }
+
+    protected function handleCallbackQuery($callbackQuery)
+    {
+        $user = $this->getOrCreateUser($callbackQuery['from']);
+        $message = $callbackQuery['message'];
+
+        Message::create([
+            'user_id' => $user->id,
+            'chat_id' => $message['chat']['id'],
+            'message_id' => $message['message_id'],
+            'text' => $callbackQuery['data'],
+            'type' => 'callback',
+            'data' => json_encode($callbackQuery)
+        ]);
+    }
+
+    protected function getOrCreateUser($userData)
+    {
+        return TelegramUser::firstOrCreate(
+            ['telegram_id' => $userData['id']],
+            [
+                'username' => $userData['username'] ?? null,
+                'first_name' => $userData['first_name'] ?? null,
+                'last_name' => $userData['last_name'] ?? null,
+                'language_code' => $userData['language_code'] ?? null,
+            ]
+        );
+    }
+
+    protected function getOrCreateChat($chatData)
+    {
+        return Chat::firstOrCreate(
+            ['telegram_id' => $chatData['id']],
+            [
+                'type' => $chatData['type'],
+                'title' => $chatData['title'] ?? null,
+                'username' => $chatData['username'] ?? null,
+                'first_name' => $chatData['first_name'] ?? null,
+                'last_name' => $chatData['last_name'] ?? null,
+            ]
+        );
+    }
+
+    public function validateInitData($initData)
+    {
+        try {
+            $data = [];
+            parse_str($initData, $data);
+            
+            if (!isset($data['hash'])) {
+                return false;
+            }
+
+            $hash = $data['hash'];
+            unset($data['hash']);
+
+            ksort($data);
+            $dataString = http_build_query($data);
+            
+            $secretKey = hash('sha256', $this->botToken, true);
+            $calculatedHash = hash_hmac('sha256', $dataString, $secretKey);
+
+            return hash_equals($hash, $calculatedHash);
+        } catch (\Exception $e) {
+            Log::error('Error validating init data: ' . $e->getMessage());
+            return false;
+        }
+    }
+
+    public function getUserFromInitData($initData)
+    {
+        try {
+            $data = [];
+            parse_str($initData, $data);
+            
+            if (!isset($data['user'])) {
+                return null;
+            }
+
+            return json_decode($data['user'], true);
+        } catch (\Exception $e) {
+            Log::error('Error getting user from init data: ' . $e->getMessage());
+            return null;
         }
     }
 } 

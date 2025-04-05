@@ -1,7 +1,9 @@
 <?php
 
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\TelegramController;
+use App\Http\Controllers\WebAppController;
 
 /*
 |--------------------------------------------------------------------------
@@ -14,8 +16,16 @@ use App\Http\Controllers\TelegramController;
 |
 */
 
+// Telegram Bot Routes
 Route::prefix('telegram')->group(function () {
     Route::post('set-webhook', [TelegramController::class, 'setWebhook']);
     Route::post('webhook', [TelegramController::class, 'webhook']);
     Route::get('webhook-info', [TelegramController::class, 'webhookInfo']);
+});
+
+// Web App Routes
+Route::prefix('web-app')->middleware('telegram.webapp')->group(function () {
+    Route::post('validate-init-data', [WebAppController::class, 'validateInitData']);
+    Route::get('user-info', [WebAppController::class, 'getUserInfo']);
+    Route::get('messages', [WebAppController::class, 'getMessages']);
 }); 
