@@ -2,106 +2,70 @@
 
 namespace App\Http\Controllers;
 
+use App\Services\TelegramService;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 
 class TelegramController extends Controller
 {
-    protected $botToken;
-    protected $webhookUrl;
-    protected $botUsername;
+    protected TelegramService $telegramService;
 
-    public function __construct()
+    public function __construct(TelegramService $telegramService)
     {
-        $this->botToken = config('services.telegram.bot_token');
-        $this->webhookUrl = config('services.telegram.webhook_url');
-        $this->botUsername = config('services.telegram.bot_username');
+        $this->telegramService = $telegramService;
     }
 
-    public function setWebhook()
+    /**
+     * Установка вебхука
+     */
+    public function setWebhook(Request $request)
     {
-        try {
-            $response = Http::post("https://api.telegram.org/bot{$this->botToken}/setWebhook", [
-                'url' => $this->webhookUrl
-            ]);
-
-            Log::info('Webhook setting response:', $response->json());
-
+        $webhookUrl = config('services.telegram.webhook_url');
+        
+        if (!$webhookUrl) {
             return response()->json([
-                'success' => $response->successful(),
-                'data' => $response->json()
-            ]);
-        } catch (\Exception $e) {
-            Log::error('Error setting webhook: ' . $e->getMessage());
-            return response()->json([
-                'success' => false,
-                'error' => $e->getMessage()
+                'ok' => false,
+                'error' => 'Webhook URL не настроен',
             ], 500);
         }
+
+        $result = $this->telegramService->setWebhook($webhookUrl);
+        
+        return response()->json($result);
     }
 
+    /**
+     * Получение информации о вебхуке
+     */
+    public function webhookInfo()
+    {
+        $result = $this->telegramService->getWebhookInfo();
+        
+        return response()->json($result);
+    }
+
+    /**
+     * Обработка входящих сообщений
+     */
     public function webhook(Request $request)
     {
         try {
             $update = $request->all();
-            Log::info('Telegram update:', $update);
+            Log::info('Telegram Webhook Update', $update);
 
-            // Получаем сообщение
-            $message = $update['message'] ?? null;
-            if (!$message) {
-                return response()->json(['success' => true]);
-            }
+            $this->telegramService->handleMessage($update);
 
-            $chatId = $message['chat']['id'] ?? null;
-            $text = $message['text'] ?? '';
-
-            // Простой ответ на сообщение
-            if ($chatId) {
-                $this->sendMessage($chatId, "Вы написали: $text");
-            }
-
-            return response()->json(['success' => true]);
+            return response()->json(['ok' => true]);
         } catch (\Exception $e) {
-            Log::error('Error processing webhook: ' . $e->getMessage());
-            return response()->json([
-                'success' => false,
-                'error' => $e->getMessage()
-            ], 500);
-        }
-    }
-
-    public function webhookInfo()
-    {
-        try {
-            $response = Http::get("https://api.telegram.org/bot{$this->botToken}/getWebhookInfo");
-            
-            return response()->json([
-                'success' => true,
-                'data' => $response->json()
-            ]);
-        } catch (\Exception $e) {
-            Log::error('Error getting webhook info: ' . $e->getMessage());
-            return response()->json([
-                'success' => false,
-                'error' => $e->getMessage()
-            ], 500);
-        }
-    }
-
-    protected function sendMessage($chatId, $text)
-    {
-        try {
-            $response = Http::post("https://api.telegram.org/bot{$this->botToken}/sendMessage", [
-                'chat_id' => $chatId,
-                'text' => $text
+            Log::error('Webhook Error', [
+                'message' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
             ]);
 
-            Log::info('Message sent:', $response->json());
-            return $response->json();
-        } catch (\Exception $e) {
-            Log::error('Error sending message: ' . $e->getMessage());
-            return null;
+            return response()->json([
+                'ok' => false,
+                'error' => $e->getMessage(),
+            ], 500);
         }
     }
 }
