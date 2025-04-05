@@ -23,7 +23,7 @@ class TelegramController extends Controller
         }
     }
 
-    public function setWebhook()
+    public function setWebhook(Request $request)
     {
         try {
             if (empty($this->botToken)) {
@@ -73,7 +73,7 @@ class TelegramController extends Controller
         }
     }
 
-    public function webhookInfo()
+    public function webhookInfo(Request $request)
     {
         try {
             if (empty($this->botToken)) {

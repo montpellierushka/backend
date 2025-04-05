@@ -20,7 +20,7 @@ use Illuminate\Http\Request;
 */
 
 // Телеграм бот
-Route::prefix('telegram')->name('telegram.')->group(function () {
+Route::group(['prefix' => 'telegram', 'as' => 'telegram.'], function () {
     Route::post('set-webhook', [TelegramController::class, 'setWebhook'])->name('set-webhook');
     Route::post('webhook', [TelegramController::class, 'webhook'])->name('webhook');
     Route::get('webhook-info', [TelegramController::class, 'webhookInfo'])->name('webhook-info');
