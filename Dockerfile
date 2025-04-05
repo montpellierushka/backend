@@ -1,10 +1,10 @@
 FROM composer:2.6 as composer
-WORKDIR /app
+WORKDIR /var/www
 COPY . .
 RUN composer install --no-dev --optimize-autoloader
 
 FROM php:8.2-fpm
-WORKDIR /app
+WORKDIR /var/www
 
 # Установка системных зависимостей
 RUN apt-get update && apt-get install -y \
@@ -20,14 +20,14 @@ RUN apt-get update && apt-get install -y \
     && docker-php-ext-install -j$(nproc) gd pdo pdo_mysql
 
 # Копирование файлов из composer stage
-COPY --from=composer /app /app
+COPY --from=composer /var/www /var/www
 
 # Копирование конфигурации Nginx и PHP-FPM
 COPY nginx.conf /etc/nginx/conf.d/default.conf
 COPY www.conf /usr/local/etc/php-fpm.d/www.conf
 
 # Установка прав
-RUN chown -R www-data:www-data /app/storage /app/bootstrap/cache \
+RUN chown -R www-data:www-data /var/www/storage /var/www/bootstrap/cache \
     && chmod -R 775 storage bootstrap/cache
 
 # Создание скрипта для запуска
@@ -69,11 +69,11 @@ chmod -R 775 storage bootstrap/cache\n\
 \n\
 # Запуск PHP-FPM и Nginx\n\
 php-fpm -D\n\
-nginx -g "daemon off;"' > /app/start.sh \
-    && chmod +x /app/start.sh
+nginx -g "daemon off;"' > /var/www/start.sh \
+    && chmod +x /var/www/start.sh
 
 # Открытие портов
 EXPOSE 80
 
 # Запуск приложения
-CMD ["/app/start.sh"] 
+CMD ["/var/www/start.sh"] 
