@@ -49,6 +49,7 @@ cp .env.example .env\n\
 sed -i "s|TELEGRAM_BOT_TOKEN=.*|TELEGRAM_BOT_TOKEN=${TELEGRAM_BOT_TOKEN}|g" .env\n\
 sed -i "s|TELEGRAM_WEBHOOK_URL=.*|TELEGRAM_WEBHOOK_URL=${TELEGRAM_WEBHOOK_URL}|g" .env\n\
 sed -i "s|TELEGRAM_BOT_USERNAME=.*|TELEGRAM_BOT_USERNAME=${TELEGRAM_BOT_USERNAME}|g" .env\n\
+sed -i "s|TELEGRAM_WEB_APP_URL=.*|TELEGRAM_WEB_APP_URL=${TELEGRAM_WEB_APP_URL}|g" .env\n\
 sed -i "s|DB_HOST=.*|DB_HOST=${DB_HOST}|g" .env\n\
 sed -i "s|DB_PORT=.*|DB_PORT=${DB_PORT}|g" .env\n\
 sed -i "s|DB_DATABASE=.*|DB_DATABASE=${DB_DATABASE}|g" .env\n\
