@@ -30,25 +30,35 @@ COPY --from=composer /app /app
 RUN chown -R www-data:www-data /app/storage /app/bootstrap/cache \
     && chmod -R 775 storage bootstrap/cache
 
-# Копирование .env.example в .env
-RUN mv .env.example .env
-
-# Генерация ключа приложения
-RUN php artisan key:generate
-
-# Запуск миграций
-RUN php artisan migrate --force
-
-# Создание символической ссылки для storage
-RUN php artisan storage:link
-
-# Очистка и кэширование
-RUN php artisan config:cache \
-    && php artisan route:cache \
-    && php artisan view:cache
-
-# Установка зависимостей для фронтенда и сборка
-RUN npm install && npm run build
+# Создание скрипта для запуска
+RUN echo '#!/bin/bash\n\
+# Копирование .env.example в .env\n\
+cp .env.example .env\n\
+\n\
+# Замена переменных окружения\n\
+sed -i "s|DB_HOST=.*|DB_HOST=${DB_HOST}|g" .env\n\
+sed -i "s|DB_PORT=.*|DB_PORT=${DB_PORT}|g" .env\n\
+sed -i "s|DB_DATABASE=.*|DB_DATABASE=${DB_DATABASE}|g" .env\n\
+sed -i "s|DB_USERNAME=.*|DB_USERNAME=${DB_USERNAME}|g" .env\n\
+sed -i "s|DB_PASSWORD=.*|DB_PASSWORD=${DB_PASSWORD}|g" .env\n\
+\n\
+# Генерация ключа приложения\n\
+php artisan key:generate\n\
+\n\
+# Запуск миграций\n\
+php artisan migrate --force\n\
+\n\
+# Создание символической ссылки для storage\n\
+php artisan storage:link\n\
+\n\
+# Очистка и кэширование\n\
+php artisan config:cache\n\
+php artisan route:cache\n\
+php artisan view:cache\n\
+\n\
+# Запуск приложения\n\
+php artisan serve --host=0.0.0.0 --port=8000' > /app/start.sh \
+    && chmod +x /app/start.sh
 
 # Запуск приложения
-CMD ["php", "artisan", "serve", "--host=0.0.0.0", "--port=8000"] 
+CMD ["/app/start.sh"] 
