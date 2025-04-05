@@ -68,6 +68,9 @@ php artisan view:cache\n\
 chown -R www-data:www-data storage bootstrap/cache\n\
 chmod -R 775 storage bootstrap/cache\n\
 \n\
+# Настройка Nginx\n\
+rm -f /etc/nginx/sites-enabled/default\n\
+\n\
 # Запуск PHP-FPM и Nginx\n\
 service nginx start\n\
 php-fpm' > /app/start.sh \
