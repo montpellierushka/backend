@@ -6,7 +6,6 @@ use App\Http\Controllers\RecipeController;
 use App\Http\Controllers\RouteController;
 use App\Http\Controllers\TagController;
 use App\Http\Controllers\AuthController;
-use Illuminate\Http\Request;
 
 /*
 |--------------------------------------------------------------------------
@@ -51,19 +50,4 @@ Route::middleware('auth:sanctum')->group(function () {
     
     // Теги
     Route::apiResource('tags', TagController::class);
-});
-
-require __DIR__.'/auth.php';
-
-Route::middleware([
-    'auth:sanctum',
-    config('jetstream.auth_middleware')
-])->group(function () {
-    Route::get('/', function () {
-        return view('welcome');
-    });
-});
-
-Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
-    return $request->user();
 }); 
