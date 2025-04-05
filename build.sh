@@ -1,24 +1,25 @@
 #!/bin/bash
 
-# Установка зависимостей без dev-пакетов
-composer install --no-dev --optimize-autoloader
+# Установка зависимостей
+composer install --optimize-autoloader --no-dev
+
+# Генерация ключа приложения, если его нет
+if [ -z "$APP_KEY" ]; then
+    php artisan key:generate
+fi
+
+# Запуск миграций
+php artisan migrate --force
+
+# Создание символических ссылок для хранилища
+php artisan storage:link
 
 # Очистка кэша
-php artisan config:clear
-php artisan cache:clear
-php artisan view:clear
-php artisan route:clear
-
-# Оптимизация
 php artisan config:cache
 php artisan route:cache
 php artisan view:cache
-php artisan optimize
 
 # Установка прав на директории
 chmod -R 775 storage bootstrap/cache
-
-# Создание символической ссылки для storage
-php artisan storage:link
 
 echo "Сборка проекта завершена успешно!" 
