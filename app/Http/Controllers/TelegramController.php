@@ -2,43 +2,84 @@
 
 namespace App\Http\Controllers;
 
-use App\Services\TelegramService;
 use Illuminate\Http\Request;
-use Telegram\Bot\Objects\Update;
+use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Log;
 
 class TelegramController extends Controller
 {
-    protected $telegramService;
+    protected $botToken;
+    protected $botUsername;
+    protected $webhookUrl;
 
-    public function __construct(TelegramService $telegramService)
+    public function __construct()
     {
-        $this->telegramService = $telegramService;
-    }
-
-    public function webhook(Request $request)
-    {
-        $update = new Update($request->all());
-        return $this->telegramService->handleWebhook($update);
+        $this->botToken = config('services.telegram.bot_token');
+        $this->botUsername = config('services.telegram.bot_username');
+        $this->webhookUrl = config('services.telegram.webhook_url');
     }
 
     public function setWebhook()
     {
-        $webhookUrl = config('services.telegram.webhook_url');
-        $response = $this->telegramService->setWebhook($webhookUrl);
-        
-        return response()->json([
-            'success' => $response->isOk(),
-            'message' => $response->getDescription()
-        ]);
+        try {
+            $response = Http::post("https://api.telegram.org/bot{$this->botToken}/setWebhook", [
+                'url' => $this->webhookUrl
+            ]);
+
+            Log::info('Webhook set response:', ['response' => $response->json()]);
+
+            return response()->json([
+                'success' => $response->successful(),
+                'message' => $response->json()
+            ]);
+        } catch (\Exception $e) {
+            Log::error('Error setting webhook:', ['error' => $e->getMessage()]);
+            return response()->json([
+                'success' => false,
+                'message' => $e->getMessage()
+            ], 500);
+        }
     }
 
-    public function removeWebhook()
+    public function webhook(Request $request)
     {
-        $response = $this->telegramService->removeWebhook();
-        
-        return response()->json([
-            'success' => $response->isOk(),
-            'message' => $response->getDescription()
+        try {
+            $update = $request->all();
+            Log::info('Telegram webhook received:', ['update' => $update]);
+
+            // Здесь будет логика обработки сообщений от бота
+            $message = $update['message']['text'] ?? '';
+            $chatId = $update['message']['chat']['id'] ?? null;
+
+            if ($chatId && $message) {
+                $this->sendMessage($chatId, "Вы написали: $message");
+            }
+
+            return response()->json(['ok' => true]);
+        } catch (\Exception $e) {
+            Log::error('Error processing webhook:', ['error' => $e->getMessage()]);
+            return response()->json(['ok' => false], 500);
+        }
+    }
+
+    public function webhookInfo()
+    {
+        try {
+            $response = Http::get("https://api.telegram.org/bot{$this->botToken}/getWebhookInfo");
+            return response()->json($response->json());
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => $e->getMessage()
+            ], 500);
+        }
+    }
+
+    protected function sendMessage($chatId, $text)
+    {
+        return Http::post("https://api.telegram.org/bot{$this->botToken}/sendMessage", [
+            'chat_id' => $chatId,
+            'text' => $text
         ]);
     }
 } 

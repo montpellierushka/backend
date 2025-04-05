@@ -6,6 +6,7 @@ use App\Http\Controllers\RecipeController;
 use App\Http\Controllers\RouteController;
 use App\Http\Controllers\TagController;
 use App\Http\Controllers\AuthController;
+use Illuminate\Http\Request;
 
 /*
 |--------------------------------------------------------------------------
@@ -47,9 +48,9 @@ Route::get('public/tags', [TagController::class, 'index']);
 
 // Телеграм бот
 Route::prefix('telegram')->group(function () {
-    Route::post('webhook', [TelegramController::class, 'webhook']);
     Route::post('set-webhook', [TelegramController::class, 'setWebhook']);
-    Route::post('remove-webhook', [TelegramController::class, 'removeWebhook']);
+    Route::post('webhook', [TelegramController::class, 'webhook']);
+    Route::get('webhook-info', [TelegramController::class, 'webhookInfo']);
 });
 
 require __DIR__.'/auth.php';
@@ -61,4 +62,8 @@ Route::middleware([
     Route::get('/', function () {
         return view('welcome');
     });
+});
+
+Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
+    return $request->user();
 }); 
