@@ -27,8 +27,9 @@ RUN curl -sL https://deb.nodesource.com/setup_18.x | bash - \
 # Копирование файлов из composer stage
 COPY --from=composer /app /app
 
-# Копирование конфигурации Nginx
+# Копирование конфигурации Nginx и PHP-FPM
 COPY nginx.conf /etc/nginx/conf.d/default.conf
+COPY www.conf /usr/local/etc/php-fpm.d/www.conf
 
 # Установка прав
 RUN chown -R www-data:www-data /app/storage /app/bootstrap/cache \
@@ -72,8 +73,8 @@ chmod -R 775 storage bootstrap/cache\n\
 rm -f /etc/nginx/sites-enabled/default\n\
 \n\
 # Запуск PHP-FPM и Nginx\n\
-service nginx start\n\
-php-fpm' > /app/start.sh \
+php-fpm -D\n\
+nginx -g "daemon off;"' > /app/start.sh \
     && chmod +x /app/start.sh
 
 # Открытие портов
