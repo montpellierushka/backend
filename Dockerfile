@@ -22,6 +22,10 @@ RUN apt-get update && apt-get install -y \
 # Копирование файлов из composer stage
 COPY --from=composer /var/www /var/www
 
+# Удаление дефолтной конфигурации Nginx
+RUN rm -f /etc/nginx/sites-enabled/default \
+    && rm -f /etc/nginx/conf.d/default.conf
+
 # Копирование конфигурации Nginx и PHP-FPM
 COPY nginx.conf /etc/nginx/conf.d/default.conf
 COPY www.conf /usr/local/etc/php-fpm.d/www.conf
