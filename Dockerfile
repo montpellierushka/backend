@@ -1,15 +1,28 @@
 FROM composer:2.6 as composer
 
+# Установка необходимых зависимостей
+RUN apk add --no-cache \
+    libpng-dev \
+    libzip-dev \
+    zip \
+    unzip
+
+# Установка переменной окружения для работы composer от root
+ENV COMPOSER_ALLOW_SUPERUSER=1
+
 WORKDIR /var/www
 
-# Копируем только файлы, необходимые для установки зависимостей
+# Копируем composer файлы
 COPY composer.json composer.lock ./
+
+# Установка зависимостей
+RUN composer install --no-dev --no-scripts --no-autoloader
 
 # Копируем остальные файлы проекта
 COPY . .
 
-# Устанавливаем зависимости и генерируем автозагрузчик
-RUN composer install --no-dev --optimize-autoloader
+# Генерация автозагрузчика
+RUN composer dump-autoload --optimize --no-dev
 
 FROM php:8.3-fpm
 WORKDIR /var/www
