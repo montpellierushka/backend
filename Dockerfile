@@ -45,17 +45,16 @@ COPY docker/supervisor/supervisord.conf /etc/supervisor/conf.d/supervisord.conf
 COPY docker/start.sh /usr/local/bin/start.sh
 RUN chmod +x /usr/local/bin/start.sh
 
-# Копирование .env.example в .env и настройка переменных окружения
-RUN cp .env.example .env && \
-    sed -i "s|TELEGRAM_BOT_TOKEN=.*|TELEGRAM_BOT_TOKEN=\${TELEGRAM_BOT_TOKEN}|g" .env && \
-    sed -i "s|TELEGRAM_WEBHOOK_URL=.*|TELEGRAM_WEBHOOK_URL=\${TELEGRAM_WEBHOOK_URL}|g" .env && \
-    sed -i "s|TELEGRAM_BOT_USERNAME=.*|TELEGRAM_BOT_USERNAME=\${TELEGRAM_BOT_USERNAME}|g" .env && \
-    sed -i "s|DB_HOST=.*|DB_HOST=\${DB_HOST}|g" .env && \
-    sed -i "s|DB_PORT=.*|DB_PORT=\${DB_PORT}|g" .env && \
-    sed -i "s|DB_DATABASE=.*|DB_DATABASE=\${DB_DATABASE}|g" .env && \
-    sed -i "s|DB_USERNAME=.*|DB_USERNAME=\${DB_USERNAME}|g" .env && \
-    sed -i "s|DB_PASSWORD=.*|DB_PASSWORD=\${DB_PASSWORD}|g" .env
-
+# Замена переменных окружения\n\
+sed -i "s|TELEGRAM_BOT_TOKEN=.*|TELEGRAM_BOT_TOKEN=${TELEGRAM_BOT_TOKEN}|g" .env\n\
+sed -i "s|TELEGRAM_WEBHOOK_URL=.*|TELEGRAM_WEBHOOK_URL=${TELEGRAM_WEBHOOK_URL}|g" .env\n\
+sed -i "s|TELEGRAM_BOT_USERNAME=.*|TELEGRAM_BOT_USERNAME=${TELEGRAM_BOT_USERNAME}|g" .env\n\
+sed -i "s|DB_HOST=.*|DB_HOST=${DB_HOST}|g" .env\n\
+sed -i "s|DB_PORT=.*|DB_PORT=${DB_PORT}|g" .env\n\
+sed -i "s|DB_DATABASE=.*|DB_DATABASE=${DB_DATABASE}|g" .env\n\
+sed -i "s|DB_USERNAME=.*|DB_USERNAME=${DB_USERNAME}|g" .env\n\
+sed -i "s|DB_PASSWORD=.*|DB_PASSWORD=${DB_PASSWORD}|g" .env\n\
+\n\
 # Открываем порт 80
 EXPOSE 80
 
