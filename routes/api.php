@@ -18,6 +18,10 @@ use App\Http\Controllers\AuthController;
 |
 */
 
+Route::get('/test', function () {
+    return response()->json(['message' => 'API route works']);
+});
+
 // Телеграм бот
 Route::group(['prefix' => 'telegram', 'as' => 'telegram.'], function () {
     Route::post('set-webhook', [TelegramController::class, 'setWebhook'])->name('set-webhook');
