@@ -19,15 +19,6 @@ RUN apt-get update && apt-get install -y \
     && docker-php-ext-configure gd --with-freetype --with-jpeg \
     && docker-php-ext-install -j$(nproc) gd pdo pdo_mysql
 
-# Установка Node.js и npm
-RUN curl -sL https://deb.nodesource.com/setup_18.x | bash - \
-    && apt-get install -y nodejs \
-    && npm install -g npm
-
-# Создание необходимых директорий
-RUN mkdir -p /var/run/php \
-    && chown -R www-data:www-data /var/run/php
-
 # Копирование файлов из composer stage
 COPY --from=composer /app /app
 
@@ -75,9 +66,6 @@ php artisan view:cache\n\
 # Установка прав на директории\n\
 chown -R www-data:www-data storage bootstrap/cache\n\
 chmod -R 775 storage bootstrap/cache\n\
-\n\
-# Настройка Nginx\n\
-rm -f /etc/nginx/sites-enabled/default\n\
 \n\
 # Запуск PHP-FPM и Nginx\n\
 php-fpm -D\n\
