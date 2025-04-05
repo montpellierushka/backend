@@ -1,30 +1,5 @@
-FROM composer:2.6 as composer
-
-# Установка необходимых зависимостей
-RUN apk add --no-cache \
-    libpng-dev \
-    libzip-dev \
-    zip \
-    unzip
-
-# Установка переменной окружения для работы composer от root
-ENV COMPOSER_ALLOW_SUPERUSER=1
-
-WORKDIR /var/www
-
-# Копируем composer файлы
-COPY composer.json composer.lock ./
-
-# Установка зависимостей
-RUN composer install --no-dev --no-scripts --no-autoloader
-
-# Копируем остальные файлы проекта
-COPY . .
-
-# Генерация автозагрузчика
-RUN composer dump-autoload --optimize --no-dev
-
 FROM php:8.3-fpm
+
 WORKDIR /var/www
 
 # Установка системных зависимостей
@@ -40,8 +15,14 @@ RUN apt-get update && apt-get install -y \
     && docker-php-ext-configure gd --with-freetype --with-jpeg \
     && docker-php-ext-install -j$(nproc) gd pdo pdo_mysql
 
-# Копирование файлов из composer stage
-COPY --from=composer /var/www /var/www
+# Установка Composer
+RUN curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer
+
+# Копирование файлов проекта
+COPY . .
+
+# Установка зависимостей
+RUN composer install --no-dev --optimize-autoloader
 
 # Удаление дефолтной конфигурации Nginx
 RUN rm -f /etc/nginx/sites-enabled/default \
