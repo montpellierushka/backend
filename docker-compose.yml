@@ -4,8 +4,8 @@ services:
   nginx:
     image: nginx:latest
     volumes:
-      - .:/var/www:delegated
-      - ./_docker/nginx/conf.d:/etc/nginx/conf.d:delegated
+      - .:/var/www
+      - ./_docker/nginx/conf.d:/etc/nginx/conf.d
     ports:
       - 8876:80
     depends_on:
@@ -17,7 +17,7 @@ services:
       context: .
       dockerfile: _docker/app/Dockerfile
     volumes:
-      - .:/var/www:delegated
+      - .:/var/www
     container_name: project_app
     environment:
       - TELEGRAM_BOT_TOKEN=${TELEGRAM_BOT_TOKEN}
