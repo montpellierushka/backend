@@ -36,6 +36,10 @@ RUN chown -R www-data:www-data /app/storage /app/bootstrap/cache \
 
 # Создание скрипта для запуска
 RUN echo '#!/bin/bash\n\
+# Создание необходимых директорий\n\
+mkdir -p storage/framework/{sessions,views,cache}\n\
+mkdir -p storage/logs\n\
+\n\
 # Копирование .env.example в .env\n\
 cp .env.example .env\n\
 \n\
@@ -59,6 +63,10 @@ php artisan storage:link\n\
 php artisan config:cache\n\
 php artisan route:cache\n\
 php artisan view:cache\n\
+\n\
+# Установка прав на директории\n\
+chown -R www-data:www-data storage bootstrap/cache\n\
+chmod -R 775 storage bootstrap/cache\n\
 \n\
 # Запуск PHP-FPM и Nginx\n\
 service nginx start\n\
