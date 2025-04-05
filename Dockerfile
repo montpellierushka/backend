@@ -24,6 +24,10 @@ RUN curl -sL https://deb.nodesource.com/setup_18.x | bash - \
     && apt-get install -y nodejs \
     && npm install -g npm
 
+# Создание необходимых директорий
+RUN mkdir -p /var/run/php \
+    && chown -R www-data:www-data /var/run/php
+
 # Копирование файлов из composer stage
 COPY --from=composer /app /app
 
@@ -81,7 +85,7 @@ nginx -g "daemon off;"' > /app/start.sh \
     && chmod +x /app/start.sh
 
 # Открытие портов
-EXPOSE 80 443
+EXPOSE 80
 
 # Запуск приложения
 CMD ["/app/start.sh"] 
