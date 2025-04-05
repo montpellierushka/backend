@@ -1,0 +1,46 @@
+# Зависимости
+/node_modules
+/vendor
+
+# Файлы окружения
+.env
+.env.*
+!.env.example
+
+# Файлы IDE и редакторов
+/.idea
+/.vscode
+/.vagrant
+
+# Системные файлы
+*.log
+*.cache
+*.sqlite
+*.sqlite-journal
+.phpunit.result.cache
+
+# Laravel-специфичные файлы
+/public/hot
+/public/storage
+/storage/*.key
+/storage/logs/*
+!/storage/logs/.gitkeep
+/storage/framework/cache/*
+!/storage/framework/cache/.gitkeep
+/storage/framework/sessions/*
+!/storage/framework/sessions/.gitkeep
+/storage/framework/views/*
+!/storage/framework/views/.gitkeep
+/storage/framework/testing/*
+!/storage/framework/testing/.gitkeep
+
+# Файлы Homestead
+Homestead.json
+Homestead.yaml
+
+# Файлы npm/yarn
+npm-debug.log
+yarn-error.log
+
+# Docker
+docker-compose.override.yml
