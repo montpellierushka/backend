@@ -36,6 +36,7 @@ RUN echo '#!/bin/bash\n\
 cp .env.example .env\n\
 \n\
 # Замена переменных окружения\n\
+sed -i "s|APP_URL=.*|APP_URL=${APP_URL}|g" .env\n\
 sed -i "s|DB_HOST=.*|DB_HOST=${DB_HOST}|g" .env\n\
 sed -i "s|DB_PORT=.*|DB_PORT=${DB_PORT}|g" .env\n\
 sed -i "s|DB_DATABASE=.*|DB_DATABASE=${DB_DATABASE}|g" .env\n\
