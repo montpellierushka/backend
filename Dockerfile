@@ -15,6 +15,7 @@ RUN apt-get update && apt-get install -y \
     unzip \
     git \
     curl \
+    nginx \
     && docker-php-ext-configure gd --with-freetype --with-jpeg \
     && docker-php-ext-install -j$(nproc) gd pdo pdo_mysql
 
@@ -26,6 +27,9 @@ RUN curl -sL https://deb.nodesource.com/setup_18.x | bash - \
 # Копирование файлов из composer stage
 COPY --from=composer /app /app
 
+# Копирование конфигурации Nginx
+COPY nginx.conf /etc/nginx/conf.d/default.conf
+
 # Установка прав
 RUN chown -R www-data:www-data /app/storage /app/bootstrap/cache \
     && chmod -R 775 storage bootstrap/cache
@@ -36,7 +40,6 @@ RUN echo '#!/bin/bash\n\
 cp .env.example .env\n\
 \n\
 # Замена переменных окружения\n\
-sed -i "s|APP_URL=.*|APP_URL=${APP_URL}|g" .env\n\
 sed -i "s|DB_HOST=.*|DB_HOST=${DB_HOST}|g" .env\n\
 sed -i "s|DB_PORT=.*|DB_PORT=${DB_PORT}|g" .env\n\
 sed -i "s|DB_DATABASE=.*|DB_DATABASE=${DB_DATABASE}|g" .env\n\
@@ -57,9 +60,13 @@ php artisan config:cache\n\
 php artisan route:cache\n\
 php artisan view:cache\n\
 \n\
-# Запуск приложения\n\
-php artisan serve --host=0.0.0.0 --port=8000' > /app/start.sh \
+# Запуск PHP-FPM и Nginx\n\
+service nginx start\n\
+php-fpm' > /app/start.sh \
     && chmod +x /app/start.sh
+
+# Открытие портов
+EXPOSE 80 443
 
 # Запуск приложения
 CMD ["/app/start.sh"] 
