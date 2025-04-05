@@ -5,14 +5,11 @@ WORKDIR /var/www
 # Копируем только файлы, необходимые для установки зависимостей
 COPY composer.json composer.lock ./
 
-# Устанавливаем зависимости
-RUN composer install --no-dev --optimize-autoloader --no-scripts --no-autoloader
-
 # Копируем остальные файлы проекта
 COPY . .
 
-# Генерируем автозагрузчик с учетом всех файлов
-RUN composer dump-autoload --optimize --no-dev
+# Устанавливаем зависимости и генерируем автозагрузчик
+RUN composer install --no-dev --optimize-autoloader
 
 FROM php:8.3-fpm
 WORKDIR /var/www
