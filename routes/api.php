@@ -30,6 +30,13 @@ Route::prefix('telegram')->name('telegram.')->group(function () {
 Route::post('login', [AuthController::class, 'login']);
 Route::post('register', [AuthController::class, 'register']);
 
+// Публичные API для получения списков
+Route::get('public/recipes', [RecipeController::class, 'index']);
+Route::get('public/recipes/{id}', [RecipeController::class, 'show']);
+Route::get('public/routes', [RouteController::class, 'index']);
+Route::get('public/routes/{id}', [RouteController::class, 'show']);
+Route::get('public/tags', [TagController::class, 'index']);
+
 // Маршруты с аутентификацией
 Route::middleware('auth:sanctum')->group(function () {
     // Пользователь
@@ -45,13 +52,6 @@ Route::middleware('auth:sanctum')->group(function () {
     // Теги
     Route::apiResource('tags', TagController::class);
 });
-
-// Публичные API для получения списков
-Route::get('public/recipes', [RecipeController::class, 'index']);
-Route::get('public/recipes/{id}', [RecipeController::class, 'show']);
-Route::get('public/routes', [RouteController::class, 'index']);
-Route::get('public/routes/{id}', [RouteController::class, 'show']);
-Route::get('public/tags', [TagController::class, 'index']);
 
 require __DIR__.'/auth.php';
 
