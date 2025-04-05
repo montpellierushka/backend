@@ -253,36 +253,94 @@ class TelegramService
     protected function handleCommand(string $command, TelegramUser $telegramUser, Chat $chat): void
     {
         $command = strtolower(trim($command, '/'));
+        $webAppUrl = config('services.telegram.web_app_url');
         
         switch ($command) {
             case 'start':
-                $this->sendMessage($chat->telegram_id, 'Добро пожаловать! Я ваш бот-помощник.');
+                $keyboard = [
+                    'inline_keyboard' => [
+                        [
+                            [
+                                'text' => '🚀 Открыть приложение',
+                                'web_app' => ['url' => $webAppUrl]
+                            ]
+                        ],
+                        [
+                            [
+                                'text' => '❓ Помощь',
+                                'callback_data' => 'help'
+                            ]
+                        ]
+                    ]
+                ];
+
+                $this->sendMessage($chat->telegram_id, 
+                    "👋 Добро пожаловать!\n\n".
+                    "Я ваш бот-помощник. Используйте кнопку ниже, чтобы открыть веб-приложение.",
+                    ['reply_markup' => json_encode($keyboard)]
+                );
                 break;
+
             case 'help':
-                $this->sendMessage($chat->telegram_id, 'Доступные команды:
-/start - Начать работу с ботом
-/help - Показать справку
-/app - Открыть веб-приложение');
+                $keyboard = [
+                    'inline_keyboard' => [
+                        [
+                            [
+                                'text' => '🚀 Открыть приложение',
+                                'web_app' => ['url' => $webAppUrl]
+                            ]
+                        ]
+                    ]
+                ];
+
+                $this->sendMessage($chat->telegram_id, 
+                    "📝 Доступные команды:\n\n".
+                    "/start - Начать работу с ботом\n".
+                    "/help - Показать справку\n".
+                    "/app - Открыть веб-приложение\n\n".
+                    "Также вы можете использовать кнопку ниже для быстрого доступа к приложению:",
+                    ['reply_markup' => json_encode($keyboard)]
+                );
                 break;
+
             case 'app':
-                $webAppUrl = config('services.telegram.web_app_url');
                 if ($webAppUrl) {
-                    $this->sendMessage($chat->telegram_id, 'Откройте веб-приложение:', [
-                        'reply_markup' => json_encode([
-                            'inline_keyboard' => [[
+                    $keyboard = [
+                        'inline_keyboard' => [
+                            [
                                 [
-                                    'text' => 'Открыть приложение',
+                                    'text' => '🚀 Открыть приложение',
                                     'web_app' => ['url' => $webAppUrl]
                                 ]
-                            ]]
-                        ])
-                    ]);
+                            ]
+                        ]
+                    ];
+
+                    $this->sendMessage($chat->telegram_id, 
+                        "🌐 Нажмите на кнопку ниже, чтобы открыть веб-приложение:",
+                        ['reply_markup' => json_encode($keyboard)]
+                    );
                 } else {
-                    $this->sendMessage($chat->telegram_id, 'Веб-приложение не настроено.');
+                    $this->sendMessage($chat->telegram_id, '⚠️ Веб-приложение временно недоступно.');
                 }
                 break;
+
             default:
-                $this->sendMessage($chat->telegram_id, 'Неизвестная команда. Используйте /help для получения списка команд.');
+                $keyboard = [
+                    'inline_keyboard' => [
+                        [
+                            [
+                                'text' => '❓ Помощь',
+                                'callback_data' => 'help'
+                            ]
+                        ]
+                    ]
+                ];
+
+                $this->sendMessage($chat->telegram_id, 
+                    "❌ Неизвестная команда.\n\nИспользуйте /help для получения списка доступных команд.",
+                    ['reply_markup' => json_encode($keyboard)]
+                );
                 break;
         }
     }
@@ -291,31 +349,73 @@ class TelegramService
     {
         try {
             if (isset($update['message'])) {
-                $this->handleMessage($update['message']);
-            } elseif (isset($update['callback_query'])) {
+                $this->handleMessage($update);
+                return ['ok' => true];
+            } 
+            
+            if (isset($update['callback_query'])) {
                 $this->handleCallbackQuery($update['callback_query']);
+                return ['ok' => true];
             }
 
+            Log::warning('Unhandled update type', ['update' => $update]);
             return ['ok' => true];
         } catch (\Exception $e) {
             Log::error('Webhook error: ' . $e->getMessage());
-            return ['ok' => false];
+            return ['ok' => false, 'error' => $e->getMessage()];
         }
     }
 
     protected function handleCallbackQuery($callbackQuery)
     {
-        $user = $this->getOrCreateUser($callbackQuery['from']);
-        $message = $callbackQuery['message'];
+        try {
+            $user = $this->getOrCreateUser($callbackQuery['from']);
+            $message = $callbackQuery['message'];
+            $data = $callbackQuery['data'];
 
-        Message::create([
-            'user_id' => $user->id,
-            'chat_id' => $message['chat']['id'],
-            'message_id' => $message['message_id'],
-            'text' => $callbackQuery['data'],
-            'type' => 'callback',
-            'data' => json_encode($callbackQuery)
-        ]);
+            // Создаем запись о callback-запросе
+            Message::create([
+                'user_id' => $user->id,
+                'chat_id' => $message['chat']['id'],
+                'message_id' => $message['message_id'],
+                'text' => $data,
+                'type' => 'callback',
+                'data' => json_encode($callbackQuery)
+            ]);
+
+            // Обрабатываем различные callback-запросы
+            switch ($data) {
+                case 'help':
+                    $webAppUrl = config('services.telegram.web_app_url');
+                    $keyboard = [
+                        'inline_keyboard' => [
+                            [
+                                [
+                                    'text' => '🚀 Открыть приложение',
+                                    'web_app' => ['url' => $webAppUrl]
+                                ]
+                            ]
+                        ]
+                    ];
+
+                    $this->sendMessage($message['chat']['id'], 
+                        "📝 Доступные команды:\n\n".
+                        "/start - Начать работу с ботом\n".
+                        "/help - Показать справку\n".
+                        "/app - Открыть веб-приложение\n\n".
+                        "Также вы можете использовать кнопку ниже для быстрого доступа к приложению:",
+                        ['reply_markup' => json_encode($keyboard)]
+                    );
+                    break;
+            }
+
+            // Отправляем ответ Telegram о успешной обработке callback-запроса
+            Http::post("{$this->apiUrl}/answerCallbackQuery", [
+                'callback_query_id' => $callbackQuery['id']
+            ]);
+        } catch (\Exception $e) {
+            Log::error('Error handling callback query: ' . $e->getMessage());
+        }
     }
 
     protected function getOrCreateUser($userData)
