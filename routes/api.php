@@ -19,6 +19,13 @@ use Illuminate\Http\Request;
 |
 */
 
+// Телеграм бот
+Route::prefix('telegram')->name('telegram.')->group(function () {
+    Route::post('set-webhook', [TelegramController::class, 'setWebhook'])->name('set-webhook');
+    Route::post('webhook', [TelegramController::class, 'webhook'])->name('webhook');
+    Route::get('webhook-info', [TelegramController::class, 'webhookInfo'])->name('webhook-info');
+});
+
 // Авторизация
 Route::post('login', [AuthController::class, 'login']);
 Route::post('register', [AuthController::class, 'register']);
@@ -45,13 +52,6 @@ Route::get('public/recipes/{id}', [RecipeController::class, 'show']);
 Route::get('public/routes', [RouteController::class, 'index']);
 Route::get('public/routes/{id}', [RouteController::class, 'show']);
 Route::get('public/tags', [TagController::class, 'index']);
-
-// Телеграм бот
-Route::prefix('telegram')->group(function () {
-    Route::post('set-webhook', [TelegramController::class, 'setWebhook']);
-    Route::post('webhook', [TelegramController::class, 'webhook']);
-    Route::get('webhook-info', [TelegramController::class, 'webhookInfo']);
-});
 
 require __DIR__.'/auth.php';
 

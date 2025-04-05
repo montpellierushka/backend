@@ -17,11 +17,22 @@ class TelegramController extends Controller
         $this->botToken = config('services.telegram.bot_token');
         $this->botUsername = config('services.telegram.bot_username');
         $this->webhookUrl = config('services.telegram.webhook_url');
+
+        if (empty($this->botToken)) {
+            Log::error('Telegram bot token is not set');
+        }
     }
 
     public function setWebhook()
     {
         try {
+            if (empty($this->botToken)) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Bot token is not set'
+                ], 500);
+            }
+
             $response = Http::post("https://api.telegram.org/bot{$this->botToken}/setWebhook", [
                 'url' => $this->webhookUrl
             ]);
@@ -65,6 +76,13 @@ class TelegramController extends Controller
     public function webhookInfo()
     {
         try {
+            if (empty($this->botToken)) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Bot token is not set'
+                ], 500);
+            }
+
             $response = Http::get("https://api.telegram.org/bot{$this->botToken}/getWebhookInfo");
             return response()->json($response->json());
         } catch (\Exception $e) {
