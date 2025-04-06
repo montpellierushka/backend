@@ -10,7 +10,8 @@ return [
         'https://*.t.me',
         env('APP_URL'),
         'http://localhost:3000',
-        'http://127.0.0.1:3000'
+        'http://127.0.0.1:3000',
+        'https://montpellierushka-backend-7c0b.twc1.net'
     ],
 
     'allowed_origins_patterns' => [],
