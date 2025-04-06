@@ -71,7 +71,7 @@ class RecipeController extends Controller
                 'ingredients',
                 'steps',
                 'user'
-            ])->loadCount('favorites');
+            ])->loadCount('favoritedBy as favorites_count');
 
             return response()->json([
                 'status' => 'success',

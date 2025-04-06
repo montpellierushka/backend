@@ -77,4 +77,12 @@ class Recipe extends Model
         return $this->belongsToMany(User::class, 'favorite_recipes')
             ->withTimestamps();
     }
+
+    /**
+     * Алиас для метода favoritedBy
+     */
+    public function favorites(): BelongsToMany
+    {
+        return $this->favoritedBy();
+    }
 } 
