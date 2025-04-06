@@ -13,6 +13,8 @@ class Like extends Model
 
     protected $fillable = [
         'user_id',
+        'likeable_type',
+        'likeable_id',
     ];
 
     public function user(): BelongsTo

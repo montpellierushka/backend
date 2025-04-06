@@ -71,4 +71,10 @@ class Recipe extends Model
     {
         return $this->morphMany(Comment::class, 'commentable');
     }
+
+    public function favoritedBy(): BelongsToMany
+    {
+        return $this->belongsToMany(User::class, 'favorite_recipes')
+            ->withTimestamps();
+    }
 } 

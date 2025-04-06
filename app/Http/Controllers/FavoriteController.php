@@ -10,25 +10,35 @@ use Illuminate\Support\Facades\Log;
 class FavoriteController extends Controller
 {
     /**
-     * Получение списка избранных рецептов
+     * Получение списка избранных рецептов и маршрутов
      */
-    public function recipes()
+    public function index(Request $request)
     {
         try {
-            $recipes = auth()->user()->favoriteRecipes()
-                ->with(['country', 'tags', 'user'])
+            $user = auth()->user();
+
+            $recipes = $user->favoriteRecipes()
+                ->with(['country', 'user'])
+                ->withCount('favorites')
+                ->paginate(12);
+
+            $routes = $user->favoriteRoutes()
+                ->with(['countries', 'user'])
                 ->withCount('favorites')
                 ->paginate(12);
 
             return response()->json([
                 'status' => 'success',
-                'data' => $recipes
+                'data' => [
+                    'recipes' => $recipes,
+                    'routes' => $routes
+                ]
             ]);
         } catch (\Exception $e) {
-            Log::error('Error in FavoriteController@recipes: ' . $e->getMessage());
+            Log::error('Error in FavoriteController@index: ' . $e->getMessage());
             return response()->json([
                 'status' => 'error',
-                'message' => 'Произошла ошибка при получении списка избранных рецептов'
+                'message' => 'Произошла ошибка при получении списка избранного'
             ], 500);
         }
     }
@@ -39,11 +49,20 @@ class FavoriteController extends Controller
     public function addRecipe(Recipe $recipe)
     {
         try {
-            auth()->user()->favoriteRecipes()->attach($recipe->id);
+            $user = auth()->user();
+
+            if ($user->favoriteRecipes()->where('recipe_id', $recipe->id)->exists()) {
+                return response()->json([
+                    'status' => 'error',
+                    'message' => 'Рецепт уже добавлен в избранное'
+                ], 400);
+            }
+
+            $user->favoriteRecipes()->attach($recipe->id);
 
             return response()->json([
                 'status' => 'success',
-                'message' => 'Рецепт добавлен в избранное'
+                'message' => 'Рецепт успешно добавлен в избранное'
             ]);
         } catch (\Exception $e) {
             Log::error('Error in FavoriteController@addRecipe: ' . $e->getMessage());
@@ -60,11 +79,20 @@ class FavoriteController extends Controller
     public function removeRecipe(Recipe $recipe)
     {
         try {
-            auth()->user()->favoriteRecipes()->detach($recipe->id);
+            $user = auth()->user();
+
+            if (!$user->favoriteRecipes()->where('recipe_id', $recipe->id)->exists()) {
+                return response()->json([
+                    'status' => 'error',
+                    'message' => 'Рецепт не найден в избранном'
+                ], 400);
+            }
+
+            $user->favoriteRecipes()->detach($recipe->id);
 
             return response()->json([
                 'status' => 'success',
-                'message' => 'Рецепт удален из избранного'
+                'message' => 'Рецепт успешно удален из избранного'
             ]);
         } catch (\Exception $e) {
             Log::error('Error in FavoriteController@removeRecipe: ' . $e->getMessage());
@@ -76,40 +104,25 @@ class FavoriteController extends Controller
     }
 
     /**
-     * Получение списка избранных маршрутов
-     */
-    public function routes()
-    {
-        try {
-            $routes = auth()->user()->favoriteRoutes()
-                ->with(['countries', 'user'])
-                ->withCount('favorites')
-                ->paginate(12);
-
-            return response()->json([
-                'status' => 'success',
-                'data' => $routes
-            ]);
-        } catch (\Exception $e) {
-            Log::error('Error in FavoriteController@routes: ' . $e->getMessage());
-            return response()->json([
-                'status' => 'error',
-                'message' => 'Произошла ошибка при получении списка избранных маршрутов'
-            ], 500);
-        }
-    }
-
-    /**
      * Добавление маршрута в избранное
      */
     public function addRoute(Route $route)
     {
         try {
-            auth()->user()->favoriteRoutes()->attach($route->id);
+            $user = auth()->user();
+
+            if ($user->favoriteRoutes()->where('route_id', $route->id)->exists()) {
+                return response()->json([
+                    'status' => 'error',
+                    'message' => 'Маршрут уже добавлен в избранное'
+                ], 400);
+            }
+
+            $user->favoriteRoutes()->attach($route->id);
 
             return response()->json([
                 'status' => 'success',
-                'message' => 'Маршрут добавлен в избранное'
+                'message' => 'Маршрут успешно добавлен в избранное'
             ]);
         } catch (\Exception $e) {
             Log::error('Error in FavoriteController@addRoute: ' . $e->getMessage());
@@ -126,11 +139,20 @@ class FavoriteController extends Controller
     public function removeRoute(Route $route)
     {
         try {
-            auth()->user()->favoriteRoutes()->detach($route->id);
+            $user = auth()->user();
+
+            if (!$user->favoriteRoutes()->where('route_id', $route->id)->exists()) {
+                return response()->json([
+                    'status' => 'error',
+                    'message' => 'Маршрут не найден в избранном'
+                ], 400);
+            }
+
+            $user->favoriteRoutes()->detach($route->id);
 
             return response()->json([
                 'status' => 'success',
-                'message' => 'Маршрут удален из избранного'
+                'message' => 'Маршрут успешно удален из избранного'
             ]);
         } catch (\Exception $e) {
             Log::error('Error in FavoriteController@removeRoute: ' . $e->getMessage());

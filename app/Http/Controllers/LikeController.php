@@ -201,4 +201,50 @@ class LikeController extends Controller
             ], 500);
         }
     }
+
+    public function toggleRecipe(Recipe $recipe)
+    {
+        try {
+            $user = auth()->user();
+            $isLiked = $recipe->toggleLike($user);
+
+            return response()->json([
+                'status' => 'success',
+                'message' => $isLiked ? 'Рецепт добавлен в лайки' : 'Рецепт удален из лайков',
+                'data' => [
+                    'is_liked' => $isLiked,
+                    'likes_count' => $recipe->likes()->count()
+                ]
+            ]);
+        } catch (\Exception $e) {
+            Log::error('Error in LikeController@toggleRecipe: ' . $e->getMessage());
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Произошла ошибка при обработке лайка'
+            ], 500);
+        }
+    }
+
+    public function toggleRoute(Route $route)
+    {
+        try {
+            $user = auth()->user();
+            $isLiked = $route->toggleLike($user);
+
+            return response()->json([
+                'status' => 'success',
+                'message' => $isLiked ? 'Маршрут добавлен в лайки' : 'Маршрут удален из лайков',
+                'data' => [
+                    'is_liked' => $isLiked,
+                    'likes_count' => $route->likes()->count()
+                ]
+            ]);
+        } catch (\Exception $e) {
+            Log::error('Error in LikeController@toggleRoute: ' . $e->getMessage());
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Произошла ошибка при обработке лайка'
+            ], 500);
+        }
+    }
 } 

@@ -3,6 +3,7 @@
 namespace App\Traits;
 
 use App\Models\Like;
+use App\Models\User;
 use Illuminate\Database\Eloquent\Relations\MorphMany;
 
 trait HasLikes
@@ -12,36 +13,31 @@ trait HasLikes
         return $this->morphMany(Like::class, 'likeable');
     }
 
-    public function isLikedBy($user): bool
+    public function isLikedBy(User $user): bool
     {
-        if (!$user) {
-            return false;
-        }
-
-        return $this->likes()
-            ->where('user_id', $user->id)
-            ->exists();
+        return $this->likes()->where('user_id', $user->id)->exists();
     }
 
-    public function like($user)
-    {
-        if ($this->isLikedBy($user)) {
-            return false;
-        }
-
-        return $this->likes()->create([
-            'user_id' => $user->id
-        ]);
-    }
-
-    public function unlike($user)
+    public function like(User $user): void
     {
         if (!$this->isLikedBy($user)) {
+            $this->likes()->create(['user_id' => $user->id]);
+        }
+    }
+
+    public function unlike(User $user): void
+    {
+        $this->likes()->where('user_id', $user->id)->delete();
+    }
+
+    public function toggleLike(User $user): bool
+    {
+        if ($this->isLikedBy($user)) {
+            $this->unlike($user);
             return false;
         }
 
-        return $this->likes()
-            ->where('user_id', $user->id)
-            ->delete();
+        $this->like($user);
+        return true;
     }
 } 
