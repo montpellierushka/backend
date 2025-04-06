@@ -6,26 +6,23 @@ use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
 {
-    /**
-     * Run the migrations.
-     */
     public function up(): void
     {
-        Schema::create('recipe_steps', function (Blueprint $table) {
+        Schema::create('recipes', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('recipe_id')->constrained()->onDelete('cascade');
-            $table->integer('step_number');
+            $table->string('title');
             $table->text('description');
+            $table->integer('cooking_time');
+            $table->integer('servings');
             $table->string('image')->nullable();
+            $table->foreignId('country_id')->constrained()->onDelete('cascade');
+            $table->foreignId('user_id')->constrained()->onDelete('cascade');
             $table->timestamps();
         });
     }
 
-    /**
-     * Reverse the migrations.
-     */
     public function down(): void
     {
-        Schema::dropIfExists('recipe_steps');
+        Schema::dropIfExists('recipes');
     }
 }; 
