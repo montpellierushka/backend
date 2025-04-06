@@ -159,15 +159,8 @@ Route::get('/stats/countries', [StatsController::class, 'countries']);
 Route::get('/stats/recipes', [StatsController::class, 'recipes']);
 Route::get('/stats/routes', [StatsController::class, 'routes']);
 
-// Защищенные маршруты (требуют аутентификации)
-Route::middleware('jwt.auth')->group(function () {
-    // Пользователь
-    Route::get('/user', function (Request $request) {
-        return $request->user();
-    });
-    Route::post('/logout', [AuthController::class, 'logout']);
-    Route::post('/refresh', [AuthController::class, 'refresh']);
-
+// Защищенные маршруты (требуют аутентификации через Telegram)
+Route::middleware('telegram.webapp')->group(function () {
     // Рецепты
     Route::post('/recipes', [RecipeController::class, 'store']);
     Route::put('/recipes/{recipe}', [RecipeController::class, 'update']);
