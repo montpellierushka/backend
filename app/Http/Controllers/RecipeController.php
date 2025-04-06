@@ -19,7 +19,7 @@ class RecipeController extends Controller
     {
         try {
             $query = Recipe::with(['country', 'tags', 'user'])
-                ->withCount('favorites');
+                ->withCount('favoritedBy as favorites_count');
 
             // Фильтрация по стране
             if ($request->has('country_id')) {
