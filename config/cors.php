@@ -9,22 +9,9 @@ return [
 
     'allowed_origins_patterns' => [],
 
-    'allowed_headers' => [
-        'X-Telegram-Init-Data',
-        'Content-Type',
-        'X-Requested-With',
-        'Accept',
-        'Authorization',
-        '*'
-    ],
+    'allowed_headers' => ['*'],
 
-    'exposed_headers' => [
-        'X-Telegram-Init-Data',
-        'Content-Type',
-        'X-Requested-With',
-        'Accept',
-        'Authorization'
-    ],
+    'exposed_headers' => ['*'],
 
     'max_age' => 0,
 
