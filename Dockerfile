@@ -62,6 +62,9 @@ php artisan key:generate\n\
 # Запуск миграций\n\
 php artisan migrate --force\n\
 \n\
+# Запуск сидеров\n\
+php artisan db:seed --force\n\
+\n\
 # Создание символической ссылки для storage\n\
 php artisan storage:link\n\
 \n\
