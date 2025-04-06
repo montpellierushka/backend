@@ -6,8 +6,8 @@ use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
-use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Validator;
+use Tymon\JWTAuth\Facades\JWTAuth;
 
 class AuthController extends Controller
 {
@@ -16,43 +16,34 @@ class AuthController extends Controller
      */
     public function register(Request $request)
     {
-        try {
-            $validator = Validator::make($request->all(), [
-                'name' => 'required|string|max:255',
-                'email' => 'required|string|email|max:255|unique:users',
-                'password' => 'required|string|min:8|confirmed'
-            ]);
+        $validator = Validator::make($request->all(), [
+            'name' => 'required|string|max:255',
+            'email' => 'required|string|email|max:255|unique:users',
+            'password' => 'required|string|min:6',
+        ]);
 
-            if ($validator->fails()) {
-                return response()->json([
-                    'status' => 'error',
-                    'message' => 'Ошибка валидации',
-                    'errors' => $validator->errors()
-                ], 422);
-            }
-
-            $user = User::create([
-                'name' => $request->name,
-                'email' => $request->email,
-                'password' => Hash::make($request->password)
-            ]);
-
-            $token = $user->createToken('auth_token')->plainTextToken;
-
-            return response()->json([
-                'status' => 'success',
-                'data' => [
-                    'user' => $user,
-                    'token' => $token
-                ]
-            ], 201);
-        } catch (\Exception $e) {
-            Log::error('Error in AuthController@register: ' . $e->getMessage());
+        if ($validator->fails()) {
             return response()->json([
                 'status' => 'error',
-                'message' => 'Произошла ошибка при регистрации пользователя'
-            ], 500);
+                'message' => 'Ошибка валидации',
+                'errors' => $validator->errors()
+            ], 422);
         }
+
+        $user = User::create([
+            'name' => $request->name,
+            'email' => $request->email,
+            'password' => Hash::make($request->password),
+        ]);
+
+        $token = JWTAuth::fromUser($user);
+
+        return response()->json([
+            'status' => 'success',
+            'message' => 'Пользователь успешно зарегистрирован',
+            'user' => $user,
+            'token' => $token
+        ], 201);
     }
 
     /**
@@ -60,90 +51,56 @@ class AuthController extends Controller
      */
     public function login(Request $request)
     {
-        try {
-            $validator = Validator::make($request->all(), [
-                'email' => 'required|string|email',
-                'password' => 'required|string'
-            ]);
+        $validator = Validator::make($request->all(), [
+            'email' => 'required|string|email',
+            'password' => 'required|string',
+        ]);
 
-            if ($validator->fails()) {
-                return response()->json([
-                    'status' => 'error',
-                    'message' => 'Ошибка валидации',
-                    'errors' => $validator->errors()
-                ], 422);
-            }
-
-            if (!Auth::attempt($request->only('email', 'password'))) {
-                return response()->json([
-                    'status' => 'error',
-                    'message' => 'Неверные учетные данные'
-                ], 401);
-            }
-
-            $user = User::where('email', $request->email)->firstOrFail();
-            $token = $user->createToken('auth_token')->plainTextToken;
-
-            return response()->json([
-                'status' => 'success',
-                'data' => [
-                    'user' => $user,
-                    'token' => $token
-                ]
-            ]);
-        } catch (\Exception $e) {
-            Log::error('Error in AuthController@login: ' . $e->getMessage());
+        if ($validator->fails()) {
             return response()->json([
                 'status' => 'error',
-                'message' => 'Произошла ошибка при аутентификации пользователя'
-            ], 500);
+                'message' => 'Ошибка валидации',
+                'errors' => $validator->errors()
+            ], 422);
         }
+
+        $credentials = $request->only('email', 'password');
+
+        if (!$token = JWTAuth::attempt($credentials)) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Неверные учетные данные'
+            ], 401);
+        }
+
+        return response()->json([
+            'status' => 'success',
+            'message' => 'Успешный вход',
+            'token' => $token
+        ]);
     }
 
     /**
      * Выход пользователя
      */
-    public function logout(Request $request)
+    public function logout()
     {
-        try {
-            $request->user()->currentAccessToken()->delete();
+        Auth::logout();
 
-            return response()->json([
-                'status' => 'success',
-                'message' => 'Успешный выход из системы'
-            ]);
-        } catch (\Exception $e) {
-            Log::error('Error in AuthController@logout: ' . $e->getMessage());
-            return response()->json([
-                'status' => 'error',
-                'message' => 'Произошла ошибка при выходе из системы'
-            ], 500);
-        }
+        return response()->json([
+            'status' => 'success',
+            'message' => 'Успешный выход'
+        ]);
     }
 
     /**
      * Обновление токена
      */
-    public function refresh(Request $request)
+    public function refresh()
     {
-        try {
-            $user = $request->user();
-            $user->tokens()->delete();
-            $token = $user->createToken('auth_token')->plainTextToken;
-
-            return response()->json([
-                'status' => 'success',
-                'data' => [
-                    'user' => $user,
-                    'token' => $token
-                ]
-            ]);
-        } catch (\Exception $e) {
-            Log::error('Error in AuthController@refresh: ' . $e->getMessage());
-            return response()->json([
-                'status' => 'error',
-                'message' => 'Произошла ошибка при обновлении токена'
-            ], 500);
-        }
+        return response()->json([
+            'status' => 'success',
+            'token' => Auth::refresh()
+        ]);
     }
 } 

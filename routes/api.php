@@ -160,12 +160,13 @@ Route::get('/stats/recipes', [StatsController::class, 'recipes']);
 Route::get('/stats/routes', [StatsController::class, 'routes']);
 
 // Защищенные маршруты (требуют аутентификации)
-Route::middleware('auth:sanctum')->group(function () {
+Route::middleware('jwt.auth')->group(function () {
     // Пользователь
     Route::get('/user', function (Request $request) {
         return $request->user();
     });
     Route::post('/logout', [AuthController::class, 'logout']);
+    Route::post('/refresh', [AuthController::class, 'refresh']);
 
     // Рецепты
     Route::post('/recipes', [RecipeController::class, 'store']);
