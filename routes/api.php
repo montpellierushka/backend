@@ -192,4 +192,15 @@ Route::middleware('telegram.webapp')->group(function () {
     // Загрузка файлов
     Route::post('/upload/image', [UploadController::class, 'image']);
     Route::delete('/upload/{path}', [UploadController::class, 'delete']);
+});
+
+// Публичные маршруты
+Route::post('/web-app/validate-init-data', [WebAppController::class, 'validateInitData']);
+
+// Защищенные маршруты
+Route::middleware('telegram.webapp')->group(function () {
+    Route::get('/web-app/user-info', [WebAppController::class, 'getUserInfo']);
+    Route::get('/web-app/messages', [WebAppController::class, 'getMessages']);
+    
+    // Здесь будут другие защищенные маршруты
 }); 

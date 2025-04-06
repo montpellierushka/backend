@@ -66,4 +66,9 @@ class Kernel extends HttpKernel
         'verified' => \Illuminate\Auth\Middleware\EnsureEmailIsVerified::class,
         'telegram.webapp' => \App\Http\Middleware\VerifyTelegramWebApp::class,
     ];
+
+    protected $routeMiddleware = [
+        // ... existing middleware ...
+        'telegram.webapp' => \App\Http\Middleware\TelegramWebAppAuth::class,
+    ];
 } 
