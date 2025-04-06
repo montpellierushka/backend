@@ -31,6 +31,8 @@ class Country extends Model
      */
     public function routes(): BelongsToMany
     {
-        return $this->belongsToMany(Route::class);
+        return $this->belongsToMany(Route::class)
+            ->withPivot('order')
+            ->orderBy('country_route.order');
     }
 } 

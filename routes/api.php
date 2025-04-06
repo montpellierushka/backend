@@ -6,6 +6,16 @@ use App\Http\Controllers\TelegramController;
 use App\Http\Controllers\WebAppController;
 use App\Http\Controllers\RecipeController;
 use App\Http\Controllers\RouteController;
+use App\Http\Controllers\CountryController;
+use App\Http\Controllers\TagController;
+use App\Http\Controllers\FavoriteController;
+use App\Http\Controllers\UserController;
+use App\Http\Controllers\AuthController;
+use App\Http\Controllers\SearchController;
+use App\Http\Controllers\UploadController;
+use App\Http\Controllers\StatsController;
+use App\Http\Controllers\CommentController;
+use App\Http\Controllers\LikeController;
 
 /*
 |--------------------------------------------------------------------------
@@ -56,4 +66,64 @@ Route::prefix('routes')->group(function () {
         Route::put('/{route}', [RouteController::class, 'update']);
         Route::delete('/{route}', [RouteController::class, 'destroy']);
     });
+});
+
+// Страны
+Route::apiResource('countries', CountryController::class);
+Route::get('countries/{country}/recipes', [CountryController::class, 'recipes']);
+Route::get('countries/{country}/routes', [CountryController::class, 'routes']);
+
+// Теги
+Route::apiResource('tags', TagController::class);
+Route::get('tags/{tag}/recipes', [TagController::class, 'recipes']);
+
+// Избранное
+Route::middleware('auth:sanctum')->group(function () {
+    Route::get('favorites', [FavoriteController::class, 'index']);
+    Route::post('favorites/{recipe}', [FavoriteController::class, 'store']);
+    Route::delete('favorites/{recipe}', [FavoriteController::class, 'destroy']);
+});
+
+// Пользователи
+Route::apiResource('users', UserController::class)->only(['show', 'update']);
+Route::get('users/{user}/recipes', [UserController::class, 'recipes']);
+Route::get('users/{user}/routes', [UserController::class, 'routes']);
+
+// Аутентификация
+Route::post('register', [AuthController::class, 'register']);
+Route::post('login', [AuthController::class, 'login']);
+Route::post('logout', [AuthController::class, 'logout'])->middleware('auth:sanctum');
+
+// Поиск
+Route::get('search', [SearchController::class, 'index']);
+
+// Загрузка файлов
+Route::middleware('auth:sanctum')->group(function () {
+    Route::post('upload/image', [UploadController::class, 'image']);
+    Route::delete('upload/{path}', [UploadController::class, 'delete']);
+});
+
+// Статистика
+Route::get('stats', [StatsController::class, 'index']);
+Route::get('stats/countries', [StatsController::class, 'countries']);
+Route::get('stats/recipes', [StatsController::class, 'recipes']);
+Route::get('stats/routes', [StatsController::class, 'routes']);
+
+// Комментарии
+Route::get('recipes/{recipe}/comments', [CommentController::class, 'recipeComments']);
+Route::get('routes/{route}/comments', [CommentController::class, 'routeComments']);
+Route::middleware('auth:sanctum')->group(function () {
+    Route::post('recipes/{recipe}/comments', [CommentController::class, 'addRecipeComment']);
+    Route::post('routes/{route}/comments', [CommentController::class, 'addRouteComment']);
+    Route::delete('comments/{comment}', [CommentController::class, 'destroy']);
+});
+
+// Лайки
+Route::middleware('auth:sanctum')->group(function () {
+    Route::post('recipes/{recipe}/like', [LikeController::class, 'likeRecipe']);
+    Route::delete('recipes/{recipe}/like', [LikeController::class, 'unlikeRecipe']);
+    Route::post('routes/{route}/like', [LikeController::class, 'likeRoute']);
+    Route::delete('routes/{route}/like', [LikeController::class, 'unlikeRoute']);
+    Route::post('comments/{comment}/like', [LikeController::class, 'likeComment']);
+    Route::delete('comments/{comment}/like', [LikeController::class, 'unlikeComment']);
 }); 

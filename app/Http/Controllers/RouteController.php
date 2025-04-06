@@ -11,49 +11,65 @@ use Illuminate\Support\Facades\DB;
 class RouteController extends Controller
 {
     /**
-     * Получение списка маршрутов
+     * Получение списка маршрутов с фильтрацией
      */
     public function index(Request $request)
     {
         try {
-            $query = Route::query()
-                ->with(['countries', 'user'])
-                ->when($request->user_id, function ($q) use ($request) {
-                    return $q->where('user_id', $request->user_id);
-                });
+            $query = Route::with(['countries', 'user'])
+                ->withCount('favorites');
 
-            $routes = $query->paginate($request->per_page ?? 12);
+            // Фильтрация по странам
+            if ($request->has('countries')) {
+                $countries = explode(',', $request->countries);
+                $query->whereHas('countries', function ($q) use ($countries) {
+                    $q->whereIn('countries.id', $countries);
+                });
+            }
+
+            // Фильтрация по длительности
+            if ($request->has('duration')) {
+                $query->where('duration', '<=', $request->duration);
+            }
+
+            // Сортировка
+            $sort = $request->get('sort', 'created_at');
+            $direction = $request->get('direction', 'desc');
+            $query->orderBy($sort, $direction);
+
+            $routes = $query->paginate(12);
 
             return response()->json([
-                'success' => true,
+                'status' => 'success',
                 'data' => $routes
             ]);
         } catch (\Exception $e) {
-            Log::error('Error getting routes: ' . $e->getMessage());
+            Log::error('Error in RouteController@index: ' . $e->getMessage());
             return response()->json([
-                'success' => false,
-                'message' => 'Internal server error'
+                'status' => 'error',
+                'message' => 'Произошла ошибка при получении списка маршрутов'
             ], 500);
         }
     }
 
     /**
-     * Получение детальной информации о маршруте
+     * Получение информации о маршруте
      */
     public function show(Route $route)
     {
         try {
-            $route->load(['countries', 'user']);
+            $route->load(['countries', 'user'])
+                ->loadCount('favorites');
 
             return response()->json([
-                'success' => true,
+                'status' => 'success',
                 'data' => $route
             ]);
         } catch (\Exception $e) {
-            Log::error('Error getting route: ' . $e->getMessage());
+            Log::error('Error in RouteController@show: ' . $e->getMessage());
             return response()->json([
-                'success' => false,
-                'message' => 'Internal server error'
+                'status' => 'error',
+                'message' => 'Произошла ошибка при получении информации о маршруте'
             ], 500);
         }
     }
@@ -64,31 +80,40 @@ class RouteController extends Controller
     public function store(Request $request)
     {
         try {
+            $validated = $request->validate([
+                'name' => 'required|string|max:255',
+                'description' => 'required|string',
+                'image' => 'nullable|image|max:2048',
+                'countries' => 'required|array',
+                'countries.*.id' => 'required|exists:countries,id',
+                'countries.*.order' => 'required|integer|min:0'
+            ]);
+
             DB::beginTransaction();
 
             $route = Route::create([
-                'title' => $request->title,
-                'description' => $request->description,
-                'duration' => $request->duration,
-                'user_id' => $request->user()->id,
+                'name' => $validated['name'],
+                'description' => $validated['description'],
+                'user_id' => auth()->id()
             ]);
 
-            if ($request->countries) {
-                $route->countries()->attach($request->countries);
+            // Привязка стран с порядком
+            foreach ($validated['countries'] as $country) {
+                $route->countries()->attach($country['id'], ['order' => $country['order']]);
             }
 
             DB::commit();
 
             return response()->json([
-                'success' => true,
-                'data' => $route->load(['countries', 'user'])
+                'status' => 'success',
+                'data' => $route->load('countries')
             ], 201);
         } catch (\Exception $e) {
             DB::rollBack();
-            Log::error('Error creating route: ' . $e->getMessage());
+            Log::error('Error in RouteController@store: ' . $e->getMessage());
             return response()->json([
-                'success' => false,
-                'message' => 'Internal server error'
+                'status' => 'error',
+                'message' => 'Произошла ошибка при создании маршрута'
             ], 500);
         }
     }
@@ -99,30 +124,40 @@ class RouteController extends Controller
     public function update(Request $request, Route $route)
     {
         try {
+            $validated = $request->validate([
+                'name' => 'required|string|max:255',
+                'description' => 'required|string',
+                'image' => 'nullable|image|max:2048',
+                'countries' => 'required|array',
+                'countries.*.id' => 'required|exists:countries,id',
+                'countries.*.order' => 'required|integer|min:0'
+            ]);
+
             DB::beginTransaction();
 
             $route->update([
-                'title' => $request->title,
-                'description' => $request->description,
-                'duration' => $request->duration,
+                'name' => $validated['name'],
+                'description' => $validated['description']
             ]);
 
-            if ($request->countries) {
-                $route->countries()->sync($request->countries);
+            // Обновление привязки стран с порядком
+            $route->countries()->detach();
+            foreach ($validated['countries'] as $country) {
+                $route->countries()->attach($country['id'], ['order' => $country['order']]);
             }
 
             DB::commit();
 
             return response()->json([
-                'success' => true,
-                'data' => $route->load(['countries', 'user'])
+                'status' => 'success',
+                'data' => $route->load('countries')
             ]);
         } catch (\Exception $e) {
             DB::rollBack();
-            Log::error('Error updating route: ' . $e->getMessage());
+            Log::error('Error in RouteController@update: ' . $e->getMessage());
             return response()->json([
-                'success' => false,
-                'message' => 'Internal server error'
+                'status' => 'error',
+                'message' => 'Произошла ошибка при обновлении маршрута'
             ], 500);
         }
     }
@@ -133,17 +168,22 @@ class RouteController extends Controller
     public function destroy(Route $route)
     {
         try {
+            DB::beginTransaction();
+
             $route->delete();
 
+            DB::commit();
+
             return response()->json([
-                'success' => true,
-                'message' => 'Route deleted successfully'
+                'status' => 'success',
+                'message' => 'Маршрут успешно удален'
             ]);
         } catch (\Exception $e) {
-            Log::error('Error deleting route: ' . $e->getMessage());
+            DB::rollBack();
+            Log::error('Error in RouteController@destroy: ' . $e->getMessage());
             return response()->json([
-                'success' => false,
-                'message' => 'Internal server error'
+                'status' => 'error',
+                'message' => 'Произошла ошибка при удалении маршрута'
             ], 500);
         }
     }
