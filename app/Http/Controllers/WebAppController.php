@@ -2,136 +2,153 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\TelegramUser;
-use App\Models\Message;
-use App\Services\TelegramService;
+use App\Models\User;
+use App\Services\TelegramWebAppService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Validator;
 
 class WebAppController extends Controller
 {
-    protected $telegramService;
+    private TelegramWebAppService $telegramService;
 
-    public function __construct(TelegramService $telegramService)
+    public function __construct(TelegramWebAppService $telegramService)
     {
         $this->telegramService = $telegramService;
     }
 
-    /**
-     * Проверка инициализационных данных веб-приложения
-     */
     public function validateInitData(Request $request)
     {
         try {
-            $initData = $request->header('X-Telegram-Init-Data');
-            
-            if (!$initData) {
+            $validator = Validator::make($request->all(), [
+                'initData' => 'required|string',
+            ]);
+
+            if ($validator->fails()) {
                 return response()->json([
-                    'success' => false,
-                    'message' => 'Init data is missing'
+                    'status' => 'error',
+                    'message' => 'Ошибка валидации',
+                    'errors' => $validator->errors()
+                ], 422);
+            }
+
+            $isValid = $this->telegramService->validateInitData($request->initData);
+            
+            if (!$isValid) {
+                return response()->json([
+                    'status' => 'error',
+                    'message' => 'Неверные данные инициализации'
+                ], 401);
+            }
+
+            $userData = $this->telegramService->extractUserData($request->initData);
+            
+            if (!$userData) {
+                return response()->json([
+                    'status' => 'error',
+                    'message' => 'Не удалось извлечь данные пользователя'
                 ], 400);
             }
 
-            $isValid = $this->telegramService->validateInitData($initData);
-            
-            return response()->json([
-                'success' => $isValid,
-                'message' => $isValid ? 'Init data is valid' : 'Init data is invalid'
-            ]);
-        } catch (\Exception $e) {
-            Log::error('Error validating init data: ' . $e->getMessage());
-            return response()->json([
-                'success' => false,
-                'message' => 'Internal server error'
-            ], 500);
-        }
-    }
-
-    /**
-     * Получение информации о пользователе
-     */
-    public function getUserInfo(Request $request)
-    {
-        try {
-            $initData = $request->header('X-Telegram-Init-Data');
-            $userData = $this->telegramService->getUserFromInitData($initData);
-            
-            if (!$userData) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'User not found'
-                ], 404);
-            }
-
-            $user = TelegramUser::firstOrCreate(
+            // Создаем или обновляем пользователя
+            $user = User::updateOrCreate(
                 ['telegram_id' => $userData['id']],
                 [
+                    'name' => $userData['first_name'] . ' ' . ($userData['last_name'] ?? ''),
                     'username' => $userData['username'] ?? null,
-                    'first_name' => $userData['first_name'] ?? null,
-                    'last_name' => $userData['last_name'] ?? null,
-                    'language_code' => $userData['language_code'] ?? null,
+                    'photo_url' => $userData['photo_url'] ?? null,
                 ]
             );
 
-            // Добавляем URL аватара, если он есть
-            $userData['photo_url'] = $userData['photo_url'] ?? null;
-
             return response()->json([
-                'success' => true,
-                'data' => array_merge($user->toArray(), [
-                    'photo_url' => $userData['photo_url'],
-                    'is_bot' => $userData['is_bot'] ?? false,
-                    'language_code' => $userData['language_code'] ?? null,
-                ])
+                'status' => 'success',
+                'message' => 'Данные успешно проверены',
+                'data' => [
+                    'user' => $user
+                ]
             ]);
         } catch (\Exception $e) {
-            Log::error('Error getting user info: ' . $e->getMessage());
+            Log::error('Error in WebAppController@validateInitData: ' . $e->getMessage());
             return response()->json([
-                'success' => false,
-                'message' => 'Internal server error'
+                'status' => 'error',
+                'message' => 'Произошла ошибка при проверке данных'
             ], 500);
         }
     }
 
-    /**
-     * Получение истории сообщений пользователя
-     */
+    public function getUserInfo(Request $request)
+    {
+        try {
+            $validator = Validator::make($request->all(), [
+                'telegram_id' => 'required|integer',
+            ]);
+
+            if ($validator->fails()) {
+                return response()->json([
+                    'status' => 'error',
+                    'message' => 'Ошибка валидации',
+                    'errors' => $validator->errors()
+                ], 422);
+            }
+
+            $user = User::where('telegram_id', $request->telegram_id)->first();
+
+            if (!$user) {
+                return response()->json([
+                    'status' => 'error',
+                    'message' => 'Пользователь не найден'
+                ], 404);
+            }
+
+            return response()->json([
+                'status' => 'success',
+                'data' => [
+                    'user' => $user
+                ]
+            ]);
+        } catch (\Exception $e) {
+            Log::error('Error in WebAppController@getUserInfo: ' . $e->getMessage());
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Произошла ошибка при получении информации о пользователе'
+            ], 500);
+        }
+    }
+
     public function getMessages(Request $request)
     {
         try {
-            $initData = $request->header('X-Telegram-Init-Data');
-            $userData = $this->telegramService->getUserFromInitData($initData);
-            
-            if (!$userData) {
+            $validator = Validator::make($request->all(), [
+                'telegram_id' => 'required|integer',
+                'limit' => 'integer|min:1|max:100',
+                'offset' => 'integer|min:0',
+            ]);
+
+            if ($validator->fails()) {
                 return response()->json([
-                    'success' => false,
-                    'message' => 'User not found'
-                ], 404);
+                    'status' => 'error',
+                    'message' => 'Ошибка валидации',
+                    'errors' => $validator->errors()
+                ], 422);
             }
 
-            $user = TelegramUser::where('telegram_id', $userData['id'])->first();
-            
-            if (!$user) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'User not found'
-                ], 404);
-            }
+            $limit = $request->input('limit', 20);
+            $offset = $request->input('offset', 0);
 
-            $messages = Message::where('user_id', $user->id)
-                ->orderBy('created_at', 'desc')
-                ->take(50)
-                ->get();
-
+            // Здесь будет логика получения сообщений
+            // Пока что возвращаем пустой список
             return response()->json([
-                'success' => true,
-                'data' => $messages
+                'status' => 'success',
+                'data' => [
+                    'messages' => [],
+                    'total' => 0
+                ]
             ]);
         } catch (\Exception $e) {
-            Log::error('Error getting messages: ' . $e->getMessage());
+            Log::error('Error in WebAppController@getMessages: ' . $e->getMessage());
             return response()->json([
-                'success' => false,
-                'message' => 'Internal server error'
+                'status' => 'error',
+                'message' => 'Произошла ошибка при получении сообщений'
             ], 500);
         }
     }
