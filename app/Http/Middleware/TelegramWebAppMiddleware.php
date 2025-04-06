@@ -15,7 +15,18 @@ class TelegramWebAppMiddleware
      */
     public function handle(Request $request, Closure $next): Response
     {
-        // Пропускаем все запросы без проверки initData
+        // Проверяем наличие initData в заголовке
+        $initData = $request->header('X-Telegram-Init-Data');
+        
+        if (!$initData) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Требуется аутентификация через Telegram Web App'
+            ], 401);
+        }
+        
+        // TODO: Добавить проверку подписи initData
+        
         return $next($request);
     }
 } 
