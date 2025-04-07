@@ -12,8 +12,6 @@ class TelegramServiceProvider extends ServiceProvider
         $this->app->singleton(TelegramWebAppService::class, function ($app) {
             return new TelegramWebAppService();
         });
-
-        $this->app->alias(TelegramWebAppService::class, 'telegram.webapp');
     }
 
     public function boot(): void
