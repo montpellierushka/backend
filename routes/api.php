@@ -47,9 +47,9 @@ Route::prefix('recipes')->group(function () {
     Route::get('/', [RecipeController::class, 'index']);
     Route::get('/{recipe}', [RecipeController::class, 'show']);
     Route::get('/tags', [RecipeController::class, 'tags']);
+    Route::post('/', [RecipeController::class, 'store']);
     
     Route::middleware('telegram.webapp')->group(function () {
-        Route::post('/', [RecipeController::class, 'store']);
         Route::put('/{recipe}', [RecipeController::class, 'update']);
         Route::delete('/{recipe}', [RecipeController::class, 'destroy']);
     });
@@ -75,7 +75,7 @@ Route::get('countries/{country}/recipes', [CountryController::class, 'recipes'])
 Route::get('countries/{country}/routes', [CountryController::class, 'routes']);
 
 // Теги
-Route::get('tags', [TagController::class, 'index']);
+Route::apiResource('tags', TagController::class);
 Route::get('tags/{tag}/recipes', [TagController::class, 'recipes']);
 
 // Избранное
@@ -143,10 +143,6 @@ Route::get('/recipes/tag/{tag}', [RecipeController::class, 'byTag']);
 Route::get('/routes', [RouteController::class, 'index']);
 Route::get('/routes/{route}', [RouteController::class, 'show']);
 Route::get('/routes/country/{country}', [RouteController::class, 'byCountry']);
-
-// Маршруты для стран
-Route::get('/countries', [CountryController::class, 'index']);
-Route::get('/countries/{country}', [CountryController::class, 'show']);
 
 // Маршруты для тегов
 Route::get('/tags', [TagController::class, 'index']);
