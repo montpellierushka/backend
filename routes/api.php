@@ -36,7 +36,7 @@ Route::prefix('telegram')->group(function () {
 });
 
 // Web App Routes
-Route::prefix('web-app')->middleware('telegram.webapp')->group(function () {
+Route::prefix('web-app')->middleware('telegram.auth')->group(function () {
     Route::post('validate-init-data', [WebAppController::class, 'validateInitData']);
     Route::get('user-info', [WebAppController::class, 'getUserInfo']);
     Route::get('messages', [WebAppController::class, 'getMessages']);
@@ -49,7 +49,7 @@ Route::prefix('recipes')->group(function () {
     Route::get('/tags', [RecipeController::class, 'tags']);
     Route::post('/', [RecipeController::class, 'store']);
     
-    Route::middleware('telegram.webapp')->group(function () {
+    Route::middleware('telegram.auth')->group(function () {
         Route::put('/{recipe}', [RecipeController::class, 'update']);
         Route::delete('/{recipe}', [RecipeController::class, 'destroy']);
     });
@@ -61,7 +61,7 @@ Route::prefix('routes')->group(function () {
     Route::get('/{route}', [RouteController::class, 'show']);
     Route::get('/countries', [RouteController::class, 'countries']);
     
-    Route::middleware('telegram.webapp')->group(function () {
+    Route::middleware('telegram.auth')->group(function () {
         Route::post('/', [RouteController::class, 'store']);
         Route::put('/{route}', [RouteController::class, 'update']);
         Route::delete('/{route}', [RouteController::class, 'destroy']);
@@ -157,7 +157,7 @@ Route::get('/stats/recipes', [StatsController::class, 'recipes']);
 Route::get('/stats/routes', [StatsController::class, 'routes']);
 
 // Защищенные маршруты (требуют аутентификации через Telegram)
-Route::middleware('telegram.webapp')->group(function () {
+Route::middleware('telegram.auth')->group(function () {
     // Рецепты
     Route::post('/recipes', [RecipeController::class, 'store']);
     Route::put('/recipes/{recipe}', [RecipeController::class, 'update']);
@@ -195,7 +195,7 @@ Route::middleware('telegram.webapp')->group(function () {
 Route::post('/web-app/validate-init-data', [WebAppController::class, 'validateInitData']);
 
 // Защищенные маршруты
-Route::middleware('telegram.webapp')->group(function () {
+Route::middleware('telegram.auth')->group(function () {
     Route::get('/web-app/user-info', [WebAppController::class, 'getUserInfo']);
     Route::get('/web-app/messages', [WebAppController::class, 'getMessages']);
     
