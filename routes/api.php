@@ -42,76 +42,95 @@ Route::prefix('web-app')->group(function () {
     Route::get('messages', [WebAppController::class, 'getMessages'])->middleware('telegram.auth');
 });
 
-// Recipe Routes
-Route::prefix('recipes')->middleware('telegram.auth')->group(function () {
-    Route::get('/', [RecipeController::class, 'index']);
-    Route::get('/{recipe}', [RecipeController::class, 'show']);
-    Route::get('/tags', [RecipeController::class, 'tags']);
-    Route::post('/', [RecipeController::class, 'store']);
-    Route::put('/{recipe}', [RecipeController::class, 'update']);
-    Route::delete('/{recipe}', [RecipeController::class, 'destroy']);
+// Protected Routes (require Telegram authentication)
+Route::middleware('telegram.auth')->group(function () {
+    // Recipe Routes
+    Route::prefix('recipes')->group(function () {
+        Route::get('/', [RecipeController::class, 'index']);
+        Route::get('/{recipe}', [RecipeController::class, 'show']);
+        Route::get('/tags', [RecipeController::class, 'tags']);
+        Route::post('/', [RecipeController::class, 'store']);
+        Route::put('/{recipe}', [RecipeController::class, 'update']);
+        Route::delete('/{recipe}', [RecipeController::class, 'destroy']);
+    });
+
+    // Route Routes
+    Route::prefix('routes')->group(function () {
+        Route::get('/', [RouteController::class, 'index']);
+        Route::get('/{route}', [RouteController::class, 'show']);
+        Route::post('/', [RouteController::class, 'store']);
+        Route::put('/{route}', [RouteController::class, 'update']);
+        Route::delete('/{route}', [RouteController::class, 'destroy']);
+    });
+
+    // Country Routes
+    Route::prefix('countries')->group(function () {
+        Route::get('/', [CountryController::class, 'index']);
+        Route::get('/{country}', [CountryController::class, 'show']);
+        Route::get('/{country}/recipes', [CountryController::class, 'recipes']);
+        Route::get('/{country}/routes', [CountryController::class, 'routes']);
+    });
+
+    // Tag Routes
+    Route::prefix('tags')->group(function () {
+        Route::get('/', [TagController::class, 'index']);
+        Route::get('/{tag}', [TagController::class, 'show']);
+        Route::get('/{tag}/recipes', [TagController::class, 'recipes']);
+    });
+
+    // Favorite Routes
+    Route::prefix('favorites')->group(function () {
+        Route::get('/', [FavoriteController::class, 'index']);
+        Route::post('/{recipe}', [FavoriteController::class, 'store']);
+        Route::delete('/{recipe}', [FavoriteController::class, 'destroy']);
+    });
+
+    // User Routes
+    Route::prefix('users')->group(function () {
+        Route::get('/profile', [UserController::class, 'profile']);
+        Route::put('/profile', [UserController::class, 'updateProfile']);
+        Route::get('/{user}/recipes', [UserController::class, 'recipes']);
+        Route::get('/{user}/routes', [UserController::class, 'routes']);
+    });
+
+    // Search Routes
+    Route::prefix('search')->group(function () {
+        Route::get('/', [SearchController::class, 'search']);
+    });
+
+    // Upload Routes
+    Route::prefix('upload')->group(function () {
+        Route::post('/image', [UploadController::class, 'uploadImage']);
+        Route::delete('/{path}', [UploadController::class, 'delete']);
+    });
+
+    // Stats Routes
+    Route::prefix('stats')->group(function () {
+        Route::get('/', [StatsController::class, 'index']);
+        Route::get('/countries', [StatsController::class, 'countries']);
+        Route::get('/recipes', [StatsController::class, 'recipes']);
+        Route::get('/routes', [StatsController::class, 'routes']);
+    });
+
+    // Comment Routes
+    Route::prefix('comments')->group(function () {
+        Route::get('/recipe/{recipe}', [CommentController::class, 'index']);
+        Route::post('/recipe/{recipe}', [CommentController::class, 'store']);
+        Route::put('/{comment}', [CommentController::class, 'update']);
+        Route::delete('/{comment}', [CommentController::class, 'destroy']);
+    });
+
+    // Like Routes
+    Route::prefix('likes')->group(function () {
+        Route::post('/recipe/{recipe}', [LikeController::class, 'store']);
+        Route::delete('/recipe/{recipe}', [LikeController::class, 'destroy']);
+    });
 });
 
-// Route Routes
-Route::prefix('routes')->middleware('telegram.auth')->group(function () {
-    Route::get('/', [RouteController::class, 'index']);
-    Route::get('/{route}', [RouteController::class, 'show']);
-    Route::post('/', [RouteController::class, 'store']);
-    Route::put('/{route}', [RouteController::class, 'update']);
-    Route::delete('/{route}', [RouteController::class, 'destroy']);
-});
-
-// Country Routes
-Route::prefix('countries')->middleware('telegram.auth')->group(function () {
-    Route::get('/', [CountryController::class, 'index']);
-});
-
-// Tag Routes
-Route::prefix('tags')->middleware('telegram.auth')->group(function () {
-    Route::get('/', [TagController::class, 'index']);
-});
-
-// Favorite Routes
-Route::prefix('favorites')->middleware('telegram.auth')->group(function () {
-    Route::get('/', [FavoriteController::class, 'index']);
-    Route::post('/{recipe}', [FavoriteController::class, 'store']);
-    Route::delete('/{recipe}', [FavoriteController::class, 'destroy']);
-});
-
-// User Routes
-Route::prefix('users')->middleware('telegram.auth')->group(function () {
-    Route::get('/profile', [UserController::class, 'profile']);
-    Route::put('/profile', [UserController::class, 'updateProfile']);
-});
-
-// Search Routes
-Route::prefix('search')->middleware('telegram.auth')->group(function () {
-    Route::get('/', [SearchController::class, 'search']);
-});
-
-// Upload Routes
-Route::prefix('upload')->middleware('telegram.auth')->group(function () {
-    Route::post('/image', [UploadController::class, 'uploadImage']);
-});
-
-// Stats Routes
-Route::prefix('stats')->middleware('telegram.auth')->group(function () {
-    Route::get('/', [StatsController::class, 'index']);
-});
-
-// Comment Routes
-Route::prefix('comments')->middleware('telegram.auth')->group(function () {
-    Route::get('/recipe/{recipe}', [CommentController::class, 'index']);
-    Route::post('/recipe/{recipe}', [CommentController::class, 'store']);
-    Route::put('/{comment}', [CommentController::class, 'update']);
-    Route::delete('/{comment}', [CommentController::class, 'destroy']);
-});
-
-// Like Routes
-Route::prefix('likes')->middleware('telegram.auth')->group(function () {
-    Route::post('/recipe/{recipe}', [LikeController::class, 'store']);
-    Route::delete('/recipe/{recipe}', [LikeController::class, 'destroy']);
-});
+// Public Routes
+Route::post('register', [AuthController::class, 'register']);
+Route::post('login', [AuthController::class, 'login']);
+Route::post('logout', [AuthController::class, 'logout'])->middleware('auth:sanctum');
 
 // Страны
 Route::get('countries', [CountryController::class, 'index']);
@@ -134,11 +153,6 @@ Route::middleware('auth:sanctum')->group(function () {
 Route::apiResource('users', UserController::class)->only(['show', 'update']);
 Route::get('users/{user}/recipes', [UserController::class, 'recipes']);
 Route::get('users/{user}/routes', [UserController::class, 'routes']);
-
-// Аутентификация
-Route::post('register', [AuthController::class, 'register']);
-Route::post('login', [AuthController::class, 'login']);
-Route::post('logout', [AuthController::class, 'logout'])->middleware('auth:sanctum');
 
 // Поиск
 Route::get('search', [SearchController::class, 'index']);
