@@ -9,6 +9,7 @@ use App\Models\Tag;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\DB;
 
 class RecipeController extends Controller
 {
@@ -92,28 +93,32 @@ class RecipeController extends Controller
     public function store(Request $request)
     {
         try {
+            \Log::info('Начало создания рецепта', [
+                'request_data' => $request->all(),
+                'headers' => $request->headers->all()
+            ]);
+
             $validated = $request->validate([
                 'title' => 'required|string|max:255',
                 'description' => 'required|string',
                 'cooking_time' => 'required|integer|min:1',
                 'servings' => 'required|integer|min:1',
                 'country_id' => 'required|exists:countries,id',
-                'image' => 'nullable|image|max:2048',
-                'ingredients' => 'required|array',
+                'ingredients' => 'required|array|min:1',
                 'ingredients.*.name' => 'required|string',
                 'ingredients.*.amount' => 'required|numeric',
                 'ingredients.*.unit' => 'required|string',
-                'ingredients.*.notes' => 'nullable|string',
-                'steps' => 'required|array',
+                'steps' => 'required|array|min:1',
                 'steps.*.description' => 'required|string',
-                'steps.*.image' => 'nullable|image|max:2048',
-                'tags' => 'required|array',
+                'tags' => 'required|array|min:1',
                 'tags.*' => 'exists:tags,id'
             ]);
 
-            \DB::beginTransaction();
+            \Log::info('Данные прошли валидацию', ['validated' => $validated]);
 
-            // Создание рецепта
+            DB::beginTransaction();
+            \Log::info('Начало транзакции');
+
             $recipe = Recipe::create([
                 'title' => $validated['title'],
                 'description' => $validated['description'],
@@ -123,56 +128,42 @@ class RecipeController extends Controller
                 'user_id' => auth()->id()
             ]);
 
-            // Сохранение изображения рецепта
-            if ($request->hasFile('image')) {
-                $path = $request->file('image')->store('recipes', 'public');
-                $recipe->image = $path;
-                $recipe->save();
-            }
+            \Log::info('Рецепт создан', ['recipe_id' => $recipe->id]);
 
-            // Создание ингредиентов
+            // Создаем ингредиенты
             foreach ($validated['ingredients'] as $ingredient) {
-                RecipeIngredient::create([
-                    'recipe_id' => $recipe->id,
-                    'name' => $ingredient['name'],
-                    'amount' => $ingredient['amount'],
-                    'unit' => $ingredient['unit'],
-                    'notes' => $ingredient['notes'] ?? null
-                ]);
+                $recipe->ingredients()->create($ingredient);
             }
+            \Log::info('Ингредиенты созданы');
 
-            // Создание шагов
-            foreach ($validated['steps'] as $index => $step) {
-                $stepData = [
-                    'recipe_id' => $recipe->id,
-                    'step_number' => $index + 1,
-                    'description' => $step['description']
-                ];
-
-                if (isset($step['image'])) {
-                    $path = $step['image']->store('recipe-steps', 'public');
-                    $stepData['image'] = $path;
-                }
-
-                RecipeStep::create($stepData);
+            // Создаем шаги
+            foreach ($validated['steps'] as $step) {
+                $recipe->steps()->create($step);
             }
+            \Log::info('Шаги созданы');
 
-            // Привязка тегов
+            // Привязываем теги
             $recipe->tags()->attach($validated['tags']);
+            \Log::info('Теги привязаны');
 
-            \DB::commit();
+            DB::commit();
+            \Log::info('Транзакция завершена успешно');
 
-            return response()->json([
-                'status' => 'success',
-                'data' => $recipe->load(['country', 'tags', 'ingredients', 'steps'])
-            ], 201);
+            return response()->json($recipe->load(['ingredients', 'steps', 'tags', 'country']), 201);
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            \Log::error('Ошибка валидации', [
+                'errors' => $e->errors(),
+                'request_data' => $request->all()
+            ]);
+            throw $e;
         } catch (\Exception $e) {
-            \DB::rollBack();
-            Log::error('Error in RecipeController@store: ' . $e->getMessage());
-            return response()->json([
-                'status' => 'error',
-                'message' => 'Произошла ошибка при создании рецепта'
-            ], 500);
+            \Log::error('Ошибка при создании рецепта', [
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
+                'request_data' => $request->all()
+            ]);
+            DB::rollBack();
+            return response()->json(['message' => 'Ошибка при создании рецепта: ' . $e->getMessage()], 500);
         }
     }
 
