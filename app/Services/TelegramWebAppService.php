@@ -11,7 +11,7 @@ class TelegramWebAppService
 
     public function __construct()
     {
-        $this->botToken = config('services.telegram.bot_token');
+        $this->botToken = config('telegram.bot_token');
     }
 
     public function validateInitData(string $initData): bool
