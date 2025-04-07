@@ -30,7 +30,7 @@ class TelegramWebAppService
             $hash = $params['hash'];
             unset($params['hash']);
 
-            // Сортируем параметры по алфавиту
+            // Сортируем параметры по ключам
             ksort($params);
 
             // Формируем строку для проверки
@@ -38,21 +38,20 @@ class TelegramWebAppService
             foreach ($params as $key => $value) {
                 $dataCheckString .= $key . '=' . $value . "\n";
             }
-            $dataCheckString = rtrim($dataCheckString, "\n");
+            $dataCheckString = trim($dataCheckString);
 
             // Вычисляем HMAC-SHA256
             $secretKey = hash('sha256', $this->botToken, true);
-            $computedHash = hash_hmac('sha256', $dataCheckString, $secretKey);
+            $hash = hash_hmac('sha256', $dataCheckString, $secretKey);
 
-            // Сравниваем хеши
-            return hash_equals($hash, $computedHash);
+            return $hash === $params['hash'];
         } catch (\Exception $e) {
-            Log::error('Error validating Telegram init data: ' . $e->getMessage());
+            Log::error('Error validating init data: ' . $e->getMessage());
             return false;
         }
     }
 
-    public function extractUserData(string $initData): ?array
+    public function getUserData(string $initData): ?array
     {
         try {
             $params = [];
@@ -62,8 +61,7 @@ class TelegramWebAppService
                 return null;
             }
 
-            $userData = json_decode($params['user'], true);
-            return is_array($userData) ? $userData : null;
+            return json_decode($params['user'], true);
         } catch (\Exception $e) {
             Log::error('Error extracting user data: ' . $e->getMessage());
             return null;

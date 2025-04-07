@@ -42,7 +42,7 @@ class TelegramWebAppAuth
 
             \Log::info('Init data validated successfully');
 
-            $userData = $this->telegramService->extractUserData($initData);
+            $userData = $this->telegramService->getUserData($initData);
             
             if (!$userData) {
                 \Log::warning('No user data found in init data');
