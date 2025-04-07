@@ -69,5 +69,5 @@ class Kernel extends HttpKernel
 
     protected $routeMiddleware = [
         'telegram.auth' => \App\Http\Middleware\TelegramWebAppAuth::class,
-    ]; 
+    ];
 } 
