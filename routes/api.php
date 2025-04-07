@@ -28,6 +28,11 @@ use App\Http\Controllers\LikeController;
 |
 */
 
+// Public Routes
+Route::post('register', [AuthController::class, 'register']);
+Route::post('login', [AuthController::class, 'login']);
+Route::post('logout', [AuthController::class, 'logout'])->middleware('auth:sanctum');
+
 // Telegram Bot Routes
 Route::prefix('telegram')->group(function () {
     Route::post('set-webhook', [TelegramController::class, 'setWebhook']);
@@ -38,8 +43,10 @@ Route::prefix('telegram')->group(function () {
 // Web App Routes
 Route::prefix('web-app')->group(function () {
     Route::post('validate-init-data', [WebAppController::class, 'validateInitData']);
-    Route::get('user-info', [WebAppController::class, 'getUserInfo'])->middleware('telegram.auth');
-    Route::get('messages', [WebAppController::class, 'getMessages'])->middleware('telegram.auth');
+    Route::middleware('telegram.auth')->group(function () {
+        Route::get('user-info', [WebAppController::class, 'getUserInfo']);
+        Route::get('messages', [WebAppController::class, 'getMessages']);
+    });
 });
 
 // Protected Routes (require Telegram authentication)
@@ -52,6 +59,8 @@ Route::middleware('telegram.auth')->group(function () {
         Route::post('/', [RecipeController::class, 'store']);
         Route::put('/{recipe}', [RecipeController::class, 'update']);
         Route::delete('/{recipe}', [RecipeController::class, 'destroy']);
+        Route::get('/country/{country}', [RecipeController::class, 'byCountry']);
+        Route::get('/tag/{tag}', [RecipeController::class, 'byTag']);
     });
 
     // Route Routes
@@ -61,6 +70,7 @@ Route::middleware('telegram.auth')->group(function () {
         Route::post('/', [RouteController::class, 'store']);
         Route::put('/{route}', [RouteController::class, 'update']);
         Route::delete('/{route}', [RouteController::class, 'destroy']);
+        Route::get('/country/{country}', [RouteController::class, 'byCountry']);
     });
 
     // Country Routes
@@ -126,11 +136,6 @@ Route::middleware('telegram.auth')->group(function () {
         Route::delete('/recipe/{recipe}', [LikeController::class, 'destroy']);
     });
 });
-
-// Public Routes
-Route::post('register', [AuthController::class, 'register']);
-Route::post('login', [AuthController::class, 'login']);
-Route::post('logout', [AuthController::class, 'logout'])->middleware('auth:sanctum');
 
 // Страны
 Route::get('countries', [CountryController::class, 'index']);
