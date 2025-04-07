@@ -38,34 +38,79 @@ Route::prefix('telegram')->group(function () {
 // Web App Routes
 Route::prefix('web-app')->group(function () {
     Route::post('validate-init-data', [WebAppController::class, 'validateInitData']);
-    Route::get('user-info', [WebAppController::class, 'getUserInfo']);
-    Route::get('messages', [WebAppController::class, 'getMessages']);
+    Route::get('user-info', [WebAppController::class, 'getUserInfo'])->middleware('telegram.auth');
+    Route::get('messages', [WebAppController::class, 'getMessages'])->middleware('telegram.auth');
 });
 
 // Recipe Routes
-Route::prefix('recipes')->group(function () {
+Route::prefix('recipes')->middleware('telegram.auth')->group(function () {
     Route::get('/', [RecipeController::class, 'index']);
     Route::get('/{recipe}', [RecipeController::class, 'show']);
     Route::get('/tags', [RecipeController::class, 'tags']);
     Route::post('/', [RecipeController::class, 'store']);
-    
-    Route::middleware('telegram.auth')->group(function () {
-        Route::put('/{recipe}', [RecipeController::class, 'update']);
-        Route::delete('/{recipe}', [RecipeController::class, 'destroy']);
-    });
+    Route::put('/{recipe}', [RecipeController::class, 'update']);
+    Route::delete('/{recipe}', [RecipeController::class, 'destroy']);
 });
 
 // Route Routes
-Route::prefix('routes')->group(function () {
+Route::prefix('routes')->middleware('telegram.auth')->group(function () {
     Route::get('/', [RouteController::class, 'index']);
     Route::get('/{route}', [RouteController::class, 'show']);
-    Route::get('/countries', [RouteController::class, 'countries']);
-    
-    Route::middleware('telegram.auth')->group(function () {
-        Route::post('/', [RouteController::class, 'store']);
-        Route::put('/{route}', [RouteController::class, 'update']);
-        Route::delete('/{route}', [RouteController::class, 'destroy']);
-    });
+    Route::post('/', [RouteController::class, 'store']);
+    Route::put('/{route}', [RouteController::class, 'update']);
+    Route::delete('/{route}', [RouteController::class, 'destroy']);
+});
+
+// Country Routes
+Route::prefix('countries')->middleware('telegram.auth')->group(function () {
+    Route::get('/', [CountryController::class, 'index']);
+});
+
+// Tag Routes
+Route::prefix('tags')->middleware('telegram.auth')->group(function () {
+    Route::get('/', [TagController::class, 'index']);
+});
+
+// Favorite Routes
+Route::prefix('favorites')->middleware('telegram.auth')->group(function () {
+    Route::get('/', [FavoriteController::class, 'index']);
+    Route::post('/{recipe}', [FavoriteController::class, 'store']);
+    Route::delete('/{recipe}', [FavoriteController::class, 'destroy']);
+});
+
+// User Routes
+Route::prefix('users')->middleware('telegram.auth')->group(function () {
+    Route::get('/profile', [UserController::class, 'profile']);
+    Route::put('/profile', [UserController::class, 'updateProfile']);
+});
+
+// Search Routes
+Route::prefix('search')->middleware('telegram.auth')->group(function () {
+    Route::get('/', [SearchController::class, 'search']);
+});
+
+// Upload Routes
+Route::prefix('upload')->middleware('telegram.auth')->group(function () {
+    Route::post('/image', [UploadController::class, 'uploadImage']);
+});
+
+// Stats Routes
+Route::prefix('stats')->middleware('telegram.auth')->group(function () {
+    Route::get('/', [StatsController::class, 'index']);
+});
+
+// Comment Routes
+Route::prefix('comments')->middleware('telegram.auth')->group(function () {
+    Route::get('/recipe/{recipe}', [CommentController::class, 'index']);
+    Route::post('/recipe/{recipe}', [CommentController::class, 'store']);
+    Route::put('/{comment}', [CommentController::class, 'update']);
+    Route::delete('/{comment}', [CommentController::class, 'destroy']);
+});
+
+// Like Routes
+Route::prefix('likes')->middleware('telegram.auth')->group(function () {
+    Route::post('/recipe/{recipe}', [LikeController::class, 'store']);
+    Route::delete('/recipe/{recipe}', [LikeController::class, 'destroy']);
 });
 
 // Страны
