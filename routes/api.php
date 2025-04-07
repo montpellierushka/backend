@@ -36,7 +36,7 @@ Route::prefix('telegram')->group(function () {
 });
 
 // Web App Routes
-Route::prefix('web-app')->middleware('telegram')->group(function () {
+Route::prefix('web-app')->group(function () {
     Route::post('validate-init-data', [WebAppController::class, 'validateInitData']);
     Route::get('user-info', [WebAppController::class, 'getUserInfo']);
     Route::get('messages', [WebAppController::class, 'getMessages']);

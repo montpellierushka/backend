@@ -42,6 +42,7 @@ class Kernel extends HttpKernel
         'api' => [
             \Illuminate\Routing\Middleware\ThrottleRequests::class.':api',
             \Illuminate\Routing\Middleware\SubstituteBindings::class,
+            \App\Http\Middleware\TelegramWebAppAuth::class,
         ],
 
         'telegram' => [
@@ -68,6 +69,7 @@ class Kernel extends HttpKernel
         'signed' => \App\Http\Middleware\ValidateSignature::class,
         'throttle' => \Illuminate\Routing\Middleware\ThrottleRequests::class,
         'verified' => \Illuminate\Auth\Middleware\EnsureEmailIsVerified::class,
+        'telegram.auth' => \App\Http\Middleware\TelegramWebAppAuth::class,
     ];
 
     protected $routeMiddleware = [
