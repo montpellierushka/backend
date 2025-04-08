@@ -125,7 +125,6 @@ class RecipeController extends Controller
                 'cooking_time' => $validated['cooking_time'],
                 'servings' => $validated['servings'],
                 'country_id' => $validated['country_id'],
-                'user_id' => auth()->id()
             ]);
 
             \Log::info('Рецепт создан', ['recipe_id' => $recipe->id]);

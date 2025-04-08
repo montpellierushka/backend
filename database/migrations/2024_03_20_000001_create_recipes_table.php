@@ -16,7 +16,7 @@ return new class extends Migration
             $table->integer('servings');
             $table->string('image')->nullable();
             $table->foreignId('country_id')->constrained()->onDelete('cascade');
-            $table->foreignId('user_id')->constrained()->onDelete('cascade');
+            $table->foreignId('user_id')->nullable()->constrained()->onDelete('cascade');
             $table->timestamps();
         });
     }
