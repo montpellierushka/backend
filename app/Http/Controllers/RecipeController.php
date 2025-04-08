@@ -151,8 +151,7 @@ class RecipeController extends Controller
             // Загружаем основное изображение
             if ($request->hasFile('image')) {
                 $imagePath = $request->file('image')->store('recipes', 'public');
-                $recipe->image = $imagePath;
-                $recipe->save();
+                $recipe->update(['image' => $imagePath]);
             }
 
             // Создаем ингредиенты
@@ -171,8 +170,9 @@ class RecipeController extends Controller
                     'step_number' => $index + 1
                 ];
 
-                if (isset($step['image']) && $request->hasFile("steps.{$index}.image")) {
-                    $imagePath = $request->file("steps.{$index}.image")->store('recipe-steps', 'public');
+                // Проверяем наличие изображения для шага
+                if ($request->hasFile("step_images.{$index}")) {
+                    $imagePath = $request->file("step_images.{$index}")->store('recipe-steps', 'public');
                     $stepData['image'] = $imagePath;
                 }
 
