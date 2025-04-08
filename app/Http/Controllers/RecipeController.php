@@ -10,6 +10,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Validator;
 
 class RecipeController extends Controller
 {
@@ -93,7 +94,7 @@ class RecipeController extends Controller
     public function store(Request $request)
     {
         try {
-            $validated = $request->validate([
+            $validator = Validator::make($request->all(), [
                 'title' => 'required|string|max:255',
                 'description' => 'required|string',
                 'cooking_time' => 'required|integer|min:1',
@@ -111,6 +112,19 @@ class RecipeController extends Controller
                 'tags' => 'nullable|array',
                 'tags.*' => 'exists:tags,id'
             ]);
+
+            if ($validator->fails()) {
+                \Log::error('Ошибки валидации:', [
+                    'errors' => $validator->errors()->toArray(),
+                    'request_data' => $request->all()
+                ]);
+                return response()->json([
+                    'message' => 'Ошибка валидации',
+                    'errors' => $validator->errors()
+                ], 422);
+            }
+
+            $validated = $validator->validated();
 
             // Создаем рецепт
             $recipe = Recipe::create([
