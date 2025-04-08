@@ -136,8 +136,11 @@ class RecipeController extends Controller
             \Log::info('Ингредиенты созданы');
 
             // Создаем шаги
-            foreach ($validated['steps'] as $step) {
-                $recipe->steps()->create($step);
+            foreach ($validated['steps'] as $index => $step) {
+                $recipe->steps()->create([
+                    'step_number' => $index + 1,
+                    'description' => $step['description']
+                ]);
             }
             \Log::info('Шаги созданы');
 
