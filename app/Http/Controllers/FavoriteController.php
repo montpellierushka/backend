@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Recipe;
 use App\Models\Route;
+use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 
@@ -15,17 +16,22 @@ class FavoriteController extends Controller
     public function index(Request $request)
     {
         try {
-            $user = auth()->user();
+            // Временное решение - используем ID 1 как тестового пользователя
+            $userId = 1;
 
-            $recipes = $user->favoriteRecipes()
-                ->with(['country', 'user'])
-                ->withCount('favorites')
-                ->paginate(12);
+            $recipes = Recipe::whereHas('favoritedBy', function($query) use ($userId) {
+                $query->where('user_id', $userId);
+            })
+            ->with(['country', 'user'])
+            ->withCount('favorites')
+            ->paginate(12);
 
-            $routes = $user->favoriteRoutes()
-                ->with(['countries', 'user'])
-                ->withCount('favorites')
-                ->paginate(12);
+            $routes = Route::whereHas('favoritedBy', function($query) use ($userId) {
+                $query->where('user_id', $userId);
+            })
+            ->with(['countries', 'user'])
+            ->withCount('favorites')
+            ->paginate(12);
 
             return response()->json([
                 'status' => 'success',
@@ -49,7 +55,9 @@ class FavoriteController extends Controller
     public function addRecipe(Recipe $recipe)
     {
         try {
-            $user = auth()->user();
+            // Временное решение - используем ID 1 как тестового пользователя
+            $userId = 1;
+            $user = User::find($userId);
 
             if ($user->favoriteRecipes()->where('recipe_id', $recipe->id)->exists()) {
                 return response()->json([
@@ -79,7 +87,9 @@ class FavoriteController extends Controller
     public function removeRecipe(Recipe $recipe)
     {
         try {
-            $user = auth()->user();
+            // Временное решение - используем ID 1 как тестового пользователя
+            $userId = 1;
+            $user = User::find($userId);
 
             if (!$user->favoriteRecipes()->where('recipe_id', $recipe->id)->exists()) {
                 return response()->json([

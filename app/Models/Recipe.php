@@ -40,10 +40,9 @@ class Recipe extends Model
 
     public function getIsFavoriteAttribute()
     {
-        if (!auth()->check()) {
-            return false;
-        }
-        return $this->favoritedBy()->where('user_id', auth()->id())->exists();
+        // Временное решение - используем ID 1 как тестового пользователя
+        $userId = 1;
+        return $this->favoritedBy()->where('user_id', $userId)->exists();
     }
 
     /**
