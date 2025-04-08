@@ -28,7 +28,7 @@ class Recipe extends Model
         'difficulty'
     ];
 
-    protected $appends = ['image_url'];
+    protected $appends = ['image_url', 'is_favorite'];
 
     public function getImageUrlAttribute()
     {
@@ -36,6 +36,14 @@ class Recipe extends Model
             return asset('storage/' . $this->image);
         }
         return null;
+    }
+
+    public function getIsFavoriteAttribute()
+    {
+        if (!auth()->check()) {
+            return false;
+        }
+        return $this->favoritedBy()->where('user_id', auth()->id())->exists();
     }
 
     /**

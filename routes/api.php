@@ -76,8 +76,8 @@ Route::prefix('telegram')->group(function () {
     // Favorite Routes
     Route::prefix('favorites')->group(function () {
         Route::get('/', [FavoriteController::class, 'index']);
-        Route::post('/{recipe}', [FavoriteController::class, 'store']);
-        Route::delete('/{recipe}', [FavoriteController::class, 'destroy']);
+        Route::post('/recipes/{recipe}', [FavoriteController::class, 'addRecipe']);
+        Route::delete('/recipes/{recipe}', [FavoriteController::class, 'removeRecipe']);
     });
 
     // User Routes
