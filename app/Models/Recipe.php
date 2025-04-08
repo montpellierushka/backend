@@ -28,6 +28,16 @@ class Recipe extends Model
         'difficulty'
     ];
 
+    protected $appends = ['image_url'];
+
+    public function getImageUrlAttribute()
+    {
+        if ($this->image) {
+            return asset('storage/' . $this->image);
+        }
+        return null;
+    }
+
     /**
      * Связь с тегами
      */
