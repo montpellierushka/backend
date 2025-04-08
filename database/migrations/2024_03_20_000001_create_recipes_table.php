@@ -15,6 +15,7 @@ return new class extends Migration
             $table->integer('cooking_time');
             $table->integer('servings');
             $table->string('image')->nullable();
+            $table->string('difficulty')->default('medium');
             $table->foreignId('country_id')->constrained()->onDelete('cascade');
             $table->foreignId('user_id')->nullable()->constrained()->onDelete('cascade');
             $table->timestamps();

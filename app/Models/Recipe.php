@@ -24,7 +24,8 @@ class Recipe extends Model
         'servings',
         'country_id',
         'image',
-        'user_id'
+        'user_id',
+        'difficulty'
     ];
 
     /**
