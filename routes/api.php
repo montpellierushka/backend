@@ -2,8 +2,6 @@
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
-use App\Http\Controllers\TelegramController;
-use App\Http\Controllers\WebAppController;
 use App\Http\Controllers\RecipeController;
 use App\Http\Controllers\RouteController;
 use App\Http\Controllers\CountryController;
@@ -40,14 +38,7 @@ Route::prefix('telegram')->group(function () {
     Route::get('webhook-info', [TelegramController::class, 'webhookInfo']);
 });
 
-// Web App Routes
-Route::prefix('web-app')->group(function () {
-    Route::post('validate-init-data', [WebAppController::class, 'validateInitData']);
-    Route::middleware('telegram.auth')->group(function () {
-        Route::get('user-info', [WebAppController::class, 'getUserInfo']);
-        Route::get('messages', [WebAppController::class, 'getMessages']);
-    });
-});
+
 
 // Protected Routes (require Telegram authentication)
 Route::middleware('telegram.auth')->group(function () {
@@ -220,8 +211,6 @@ Route::get('/stats/countries', [StatsController::class, 'countries']);
 Route::get('/stats/recipes', [StatsController::class, 'recipes']);
 Route::get('/stats/routes', [StatsController::class, 'routes']);
 
-// Защищенные маршруты (требуют аутентификации через Telegram)
-Route::middleware('telegram.auth')->group(function () {
     // Рецепты
     Route::post('/recipes', [RecipeController::class, 'store']);
     Route::put('/recipes/{recipe}', [RecipeController::class, 'update']);
@@ -253,15 +242,4 @@ Route::middleware('telegram.auth')->group(function () {
     // Загрузка файлов
     Route::post('/upload/image', [UploadController::class, 'image']);
     Route::delete('/upload/{path}', [UploadController::class, 'delete']);
-});
 
-// Публичные маршруты
-Route::post('/web-app/validate-init-data', [WebAppController::class, 'validateInitData']);
-
-// Защищенные маршруты
-Route::middleware('telegram.auth')->group(function () {
-    Route::get('/web-app/user-info', [WebAppController::class, 'getUserInfo']);
-    Route::get('/web-app/messages', [WebAppController::class, 'getMessages']);
-    
-    // Здесь будут другие защищенные маршруты
-}); 
