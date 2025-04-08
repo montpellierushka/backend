@@ -93,79 +93,82 @@ class RecipeController extends Controller
     public function store(Request $request)
     {
         try {
-            \Log::info('Начало создания рецепта', [
-                'request_data' => $request->all(),
-                'headers' => $request->headers->all()
-            ]);
-
             $validated = $request->validate([
                 'title' => 'required|string|max:255',
                 'description' => 'required|string',
                 'cooking_time' => 'required|integer|min:1',
                 'servings' => 'required|integer|min:1',
                 'country_id' => 'required|exists:countries,id',
-                'ingredients' => 'required|array|min:1',
+                'difficulty' => 'required|in:easy,medium,hard',
+                'ingredients' => 'required|array',
                 'ingredients.*.name' => 'required|string',
                 'ingredients.*.amount' => 'required|numeric',
                 'ingredients.*.unit' => 'required|string',
-                'steps' => 'required|array|min:1',
+                'steps' => 'required|array',
                 'steps.*.description' => 'required|string',
-                'tags' => 'required|array|min:1',
+                'steps.*.image' => 'nullable|image|max:2048',
+                'image' => 'nullable|image|max:2048',
+                'tags' => 'nullable|array',
                 'tags.*' => 'exists:tags,id'
             ]);
 
-            \Log::info('Данные прошли валидацию', ['validated' => $validated]);
-
-            DB::beginTransaction();
-            \Log::info('Начало транзакции');
-
+            // Создаем рецепт
             $recipe = Recipe::create([
                 'title' => $validated['title'],
                 'description' => $validated['description'],
                 'cooking_time' => $validated['cooking_time'],
                 'servings' => $validated['servings'],
                 'country_id' => $validated['country_id'],
+                'difficulty' => $validated['difficulty']
             ]);
 
-            \Log::info('Рецепт создан', ['recipe_id' => $recipe->id]);
+            // Загружаем основное изображение
+            if ($request->hasFile('image')) {
+                $imagePath = $request->file('image')->store('recipes', 'public');
+                $recipe->image = $imagePath;
+                $recipe->save();
+            }
 
             // Создаем ингредиенты
             foreach ($validated['ingredients'] as $ingredient) {
-                $recipe->ingredients()->create($ingredient);
+                $recipe->ingredients()->create([
+                    'name' => $ingredient['name'],
+                    'amount' => $ingredient['amount'],
+                    'unit' => $ingredient['unit']
+                ]);
             }
-            \Log::info('Ингредиенты созданы');
 
             // Создаем шаги
             foreach ($validated['steps'] as $index => $step) {
-                $recipe->steps()->create([
-                    'step_number' => $index + 1,
-                    'description' => $step['description']
-                ]);
+                $stepData = [
+                    'description' => $step['description'],
+                    'step_number' => $index + 1
+                ];
+
+                if (isset($step['image']) && $request->hasFile("steps.{$index}.image")) {
+                    $imagePath = $request->file("steps.{$index}.image")->store('recipe-steps', 'public');
+                    $stepData['image'] = $imagePath;
+                }
+
+                $recipe->steps()->create($stepData);
             }
-            \Log::info('Шаги созданы');
 
             // Привязываем теги
-            $recipe->tags()->attach($validated['tags']);
-            \Log::info('Теги привязаны');
+            if (!empty($validated['tags'])) {
+                $recipe->tags()->attach($validated['tags']);
+            }
 
-            DB::commit();
-            \Log::info('Транзакция завершена успешно');
+            return response()->json([
+                'message' => 'Рецепт успешно создан',
+                'recipe' => $recipe->load(['ingredients', 'steps', 'tags', 'country'])
+            ], 201);
 
-            return response()->json($recipe->load(['ingredients', 'steps', 'tags', 'country']), 201);
-        } catch (\Illuminate\Validation\ValidationException $e) {
-            \Log::error('Ошибка валидации', [
-                'errors' => $e->errors(),
-                'request_data' => $request->all()
-            ]);
-            throw $e;
         } catch (\Exception $e) {
-            \Log::error('Ошибка при создании рецепта', [
-                'error' => $e->getMessage(),
-                'trace' => $e->getTraceAsString(),
-                'request_data' => $request->all()
-            ]);
-            DB::rollBack();
-            return response()->json(['message' => 'Ошибка при создании рецепта: ' . $e->getMessage()], 500);
+            \Log::error('Ошибка при создании рецепта: ' . $e->getMessage());
+            return response()->json([
+                'message' => 'Ошибка при создании рецепта',
+                'error' => $e->getMessage()
+            ], 500);
         }
     }
 
