@@ -22,22 +22,20 @@ class FavoriteController extends Controller
             $recipes = Recipe::whereHas('favoritedBy', function($query) use ($userId) {
                 $query->where('user_id', $userId);
             })
-            ->with(['country', 'user'])
-            ->withCount('favorites')
-            ->paginate(12);
-
-            $routes = Route::whereHas('favoritedBy', function($query) use ($userId) {
-                $query->where('user_id', $userId);
-            })
-            ->with(['countries', 'user'])
+            ->with(['country', 'user', 'ingredients', 'steps'])
             ->withCount('favorites')
             ->paginate(12);
 
             return response()->json([
                 'status' => 'success',
                 'data' => [
-                    'recipes' => $recipes,
-                    'routes' => $routes
+                    'recipes' => [
+                        'data' => $recipes->items(),
+                        'total' => $recipes->total(),
+                        'per_page' => $recipes->perPage(),
+                        'current_page' => $recipes->currentPage(),
+                        'last_page' => $recipes->lastPage()
+                    ]
                 ]
             ]);
         } catch (\Exception $e) {
