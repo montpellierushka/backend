@@ -8,7 +8,6 @@ use App\Http\Controllers\CountryController;
 use App\Http\Controllers\TagController;
 use App\Http\Controllers\FavoriteController;
 use App\Http\Controllers\UserController;
-use App\Http\Controllers\AuthController;
 use App\Http\Controllers\SearchController;
 use App\Http\Controllers\UploadController;
 use App\Http\Controllers\StatsController;
@@ -27,9 +26,7 @@ use App\Http\Controllers\LikeController;
 */
 
 // Public Routes
-Route::post('register', [AuthController::class, 'register']);
-Route::post('login', [AuthController::class, 'login']);
-Route::post('logout', [AuthController::class, 'logout'])->middleware('auth:sanctum');
+
 
 // Telegram Bot Routes
 Route::prefix('telegram')->group(function () {
@@ -122,7 +119,7 @@ Route::prefix('telegram')->group(function () {
     Route::prefix('likes')->group(function () {
         Route::post('/recipe/{recipe}', [LikeController::class, 'store']);
         Route::delete('/recipe/{recipe}', [LikeController::class, 'destroy']);
-    })
+    });
 
 // Страны
     Route::get('countries', [CountryController::class, 'index']);
