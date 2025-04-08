@@ -94,7 +94,19 @@ class RecipeController extends Controller
     public function store(Request $request)
     {
         try {
-            $validator = Validator::make($request->all(), [
+            // Преобразуем JSON-строки в массивы
+            $data = $request->all();
+            if (isset($data['ingredients'])) {
+                $data['ingredients'] = json_decode($data['ingredients'], true);
+            }
+            if (isset($data['steps'])) {
+                $data['steps'] = json_decode($data['steps'], true);
+            }
+            if (isset($data['tags'])) {
+                $data['tags'] = json_decode($data['tags'], true);
+            }
+
+            $validator = Validator::make($data, [
                 'title' => 'required|string|max:255',
                 'description' => 'required|string',
                 'cooking_time' => 'required|integer|min:1',
@@ -116,7 +128,7 @@ class RecipeController extends Controller
             if ($validator->fails()) {
                 \Log::error('Ошибки валидации:', [
                     'errors' => $validator->errors()->toArray(),
-                    'request_data' => $request->all()
+                    'request_data' => $data
                 ]);
                 return response()->json([
                     'message' => 'Ошибка валидации',
