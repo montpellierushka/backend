@@ -20,7 +20,7 @@ class Cors
 
         $response = $next($request);
 
-        $response->headers->set('Access-Control-Allow-Origin', 'https://montpellierushka-dp-df6c.twc1.net');
+        $response->headers->set('Access-Control-Allow-Origin', 'https://montpellierushka-dp-df6c.twc1.net, http://localhost:3000/');
         $response->headers->set('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
         $response->headers->set('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Requested-With, Accept, Origin');
         $response->headers->set('Access-Control-Allow-Credentials', 'true');
