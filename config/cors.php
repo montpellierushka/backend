@@ -5,7 +5,7 @@ return [
 
     'allowed_methods' => ['*'],
 
-    'allowed_origins' => ['https://montpellierushka-dp-df6c.twc1.net'],
+    'allowed_origins' => ['https://montpellierushka-dp-df6c.twc1.net, http://localhost:3000/'],
 
     'allowed_origins_patterns' => [],
 

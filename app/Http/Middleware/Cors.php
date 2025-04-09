@@ -12,7 +12,7 @@ class Cors
         // Обработка preflight запросов
         if ($request->isMethod('OPTIONS')) {
             return response('', 200)
-                ->header('Access-Control-Allow-Origin', 'https://montpellierushka-dp-df6c.twc1.net')
+                ->header('Access-Control-Allow-Origin', 'https://montpellierushka-dp-df6c.twc1.net, http://localhost:3000/')
                 ->header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS')
                 ->header('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Requested-With, Accept, Origin')
                 ->header('Access-Control-Allow-Credentials', 'true');
