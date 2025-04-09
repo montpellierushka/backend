@@ -18,6 +18,7 @@ class FavoriteController extends Controller
         try {
             // Временное решение - используем ID 1 как тестового пользователя
             $userId = 1;
+            $user = User::find($userId);
 
             $recipes = Recipe::whereHas('favoritedBy', function($query) use ($userId) {
                 $query->where('user_id', $userId);
@@ -117,7 +118,9 @@ class FavoriteController extends Controller
     public function addRoute(Route $route)
     {
         try {
-            $user = auth()->user();
+            // Временное решение - используем ID 1 как тестового пользователя
+            $userId = 1;
+            $user = User::find($userId);
 
             if ($user->favoriteRoutes()->where('route_id', $route->id)->exists()) {
                 return response()->json([
@@ -147,7 +150,9 @@ class FavoriteController extends Controller
     public function removeRoute(Route $route)
     {
         try {
-            $user = auth()->user();
+            // Временное решение - используем ID 1 как тестового пользователя
+            $userId = 1;
+            $user = User::find($userId);
 
             if (!$user->favoriteRoutes()->where('route_id', $route->id)->exists()) {
                 return response()->json([
