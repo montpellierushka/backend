@@ -52,11 +52,13 @@ Route::get('/stats/recipes', [StatsController::class, 'recipes']);
 Route::get('/stats/routes', [StatsController::class, 'routes']);
 
 // Избранное
-Route::get('/favorites', [FavoriteController::class, 'index']);
-Route::post('/favorites/recipes/{recipe}', [FavoriteController::class, 'addRecipe']);
-Route::delete('/favorites/recipes/{recipe}', [FavoriteController::class, 'removeRecipe']);
-Route::post('/favorites/routes/{route}', [FavoriteController::class, 'addRoute']);
-Route::delete('/favorites/routes/{route}', [FavoriteController::class, 'removeRoute']);
+Route::middleware('auth:sanctum')->group(function () {
+    Route::get('/favorites', [FavoriteController::class, 'index']);
+    Route::post('/favorites/recipes/{recipe}', [FavoriteController::class, 'addRecipe']);
+    Route::delete('/favorites/recipes/{recipe}', [FavoriteController::class, 'removeRecipe']);
+    Route::post('/favorites/routes/{route}', [FavoriteController::class, 'addRoute']);
+    Route::delete('/favorites/routes/{route}', [FavoriteController::class, 'removeRoute']);
+});
 
 // Лайки
 Route::post('/likes/recipes/{recipe}', [LikeController::class, 'toggleRecipe']);

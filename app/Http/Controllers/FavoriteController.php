@@ -7,6 +7,7 @@ use App\Models\Route;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Auth;
 
 class FavoriteController extends Controller
 {
@@ -20,8 +21,8 @@ class FavoriteController extends Controller
             $userId = 1;
             $user = User::find($userId);
 
-            $recipes = Recipe::whereHas('favoritedBy', function($query) use ($userId) {
-                $query->where('user_id', $userId);
+            $recipes = Recipe::whereHas('favoritedBy', function($query) use ($user) {
+                $query->where('user_id', $user->id);
             })
             ->with(['country', 'user', 'ingredients', 'steps'])
             ->withCount('favorites')
