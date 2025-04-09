@@ -26,7 +26,69 @@ use App\Http\Controllers\LikeController;
 */
 
 // Public Routes
+Route::get('/recipes', [RecipeController::class, 'index']);
+Route::get('/recipes/{recipe}', [RecipeController::class, 'show']);
+Route::get('/recipes/country/{country}', [RecipeController::class, 'byCountry']);
+Route::get('/recipes/tag/{tag}', [RecipeController::class, 'byTag']);
 
+Route::get('/routes', [RouteController::class, 'index']);
+Route::get('/routes/{route}', [RouteController::class, 'show']);
+Route::get('/routes/country/{country}', [RouteController::class, 'byCountry']);
+
+Route::get('/tags', [TagController::class, 'index']);
+Route::get('/tags/{tag}', [TagController::class, 'show']);
+Route::get('/tags/{tag}/recipes', [TagController::class, 'recipes']);
+
+Route::get('/countries', [CountryController::class, 'index']);
+Route::get('/countries/{country}', [CountryController::class, 'show']);
+Route::get('/countries/{country}/recipes', [CountryController::class, 'recipes']);
+Route::get('/countries/{country}/routes', [CountryController::class, 'routes']);
+
+Route::get('/search', [SearchController::class, 'search']);
+
+Route::get('/stats', [StatsController::class, 'index']);
+Route::get('/stats/countries', [StatsController::class, 'countries']);
+Route::get('/stats/recipes', [StatsController::class, 'recipes']);
+Route::get('/stats/routes', [StatsController::class, 'routes']);
+
+// Избранное
+Route::get('/favorites', [FavoriteController::class, 'index']);
+Route::post('/favorites/recipes/{recipe}', [FavoriteController::class, 'addRecipe']);
+Route::delete('/favorites/recipes/{recipe}', [FavoriteController::class, 'removeRecipe']);
+Route::post('/favorites/routes/{route}', [FavoriteController::class, 'addRoute']);
+Route::delete('/favorites/routes/{route}', [FavoriteController::class, 'removeRoute']);
+
+// Лайки
+Route::post('/likes/recipes/{recipe}', [LikeController::class, 'toggleRecipe']);
+Route::post('/likes/routes/{route}', [LikeController::class, 'toggleRoute']);
+
+// Комментарии
+Route::get('/recipes/{recipe}/comments', [CommentController::class, 'recipeComments']);
+Route::post('/recipes/{recipe}/comments', [CommentController::class, 'addRecipeComment']);
+Route::get('/routes/{route}/comments', [CommentController::class, 'routeComments']);
+Route::post('/routes/{route}/comments', [CommentController::class, 'addRouteComment']);
+Route::delete('/comments/{comment}', [CommentController::class, 'destroy']);
+
+// Загрузка файлов
+Route::post('/upload/image', [UploadController::class, 'image']);
+Route::delete('/upload/{path}', [UploadController::class, 'delete']);
+
+// Защищенные маршруты
+    // Рецепты
+    Route::post('/recipes', [RecipeController::class, 'store']);
+    Route::put('/recipes/{recipe}', [RecipeController::class, 'update']);
+    Route::delete('/recipes/{recipe}', [RecipeController::class, 'destroy']);
+
+    // Маршруты
+    Route::post('/routes', [RouteController::class, 'store']);
+    Route::put('/routes/{route}', [RouteController::class, 'update']);
+    Route::delete('/routes/{route}', [RouteController::class, 'destroy']);
+
+    // Пользователи
+    Route::get('/users/profile', [UserController::class, 'profile']);
+    Route::put('/users/profile', [UserController::class, 'updateProfile']);
+    Route::get('/users/{user}/recipes', [UserController::class, 'recipes']);
+    Route::get('/users/{user}/routes', [UserController::class, 'routes']);
 
 // Telegram Bot Routes
 Route::prefix('telegram')->group(function () {
@@ -122,111 +184,4 @@ Route::prefix('telegram')->group(function () {
         Route::post('/recipe/{recipe}', [LikeController::class, 'store']);
         Route::delete('/recipe/{recipe}', [LikeController::class, 'destroy']);
     });
-
-// Страны
-    Route::get('countries', [CountryController::class, 'index']);
-    Route::get('countries/{country}', [CountryController::class, 'show']);
-    Route::get('countries/{country}/recipes', [CountryController::class, 'recipes']);
-    Route::get('countries/{country}/routes', [CountryController::class, 'routes']);
-
-// Теги
-    Route::apiResource('tags', TagController::class);
-    Route::get('tags/{tag}/recipes', [TagController::class, 'recipes']);
-
-// Избранное
-    Route::get('favorites', [FavoriteController::class, 'index']);
-    Route::post('favorites/{recipe}', [FavoriteController::class, 'store']);
-    Route::delete('favorites/{recipe}', [FavoriteController::class, 'destroy']);
-
-// Пользователи
-    Route::apiResource('users', UserController::class)->only(['show', 'update']);
-    Route::get('users/{user}/recipes', [UserController::class, 'recipes']);
-    Route::get('users/{user}/routes', [UserController::class, 'routes']);
-
-// Поиск
-    Route::get('search', [SearchController::class, 'index']);
-
-// Загрузка файлов
-    Route::post('upload/image', [UploadController::class, 'image']);
-    Route::delete('upload/{path}', [UploadController::class, 'delete']);
-
-// Статистика
-    Route::get('stats', [StatsController::class, 'index']);
-    Route::get('stats/countries', [StatsController::class, 'countries']);
-    Route::get('stats/recipes', [StatsController::class, 'recipes']);
-    Route::get('stats/routes', [StatsController::class, 'routes']);
-
-// Комментарии
-    Route::get('recipes/{recipe}/comments', [CommentController::class, 'recipeComments']);
-    Route::get('routes/{route}/comments', [CommentController::class, 'routeComments']);
-    Route::post('recipes/{recipe}/comments', [CommentController::class, 'addRecipeComment']);
-    Route::post('routes/{route}/comments', [CommentController::class, 'addRouteComment']);
-    Route::delete('comments/{comment}', [CommentController::class, 'destroy']);
-
-// Лайки
-    Route::post('recipes/{recipe}/like', [LikeController::class, 'likeRecipe']);
-    Route::delete('recipes/{recipe}/like', [LikeController::class, 'unlikeRecipe']);
-    Route::post('routes/{route}/like', [LikeController::class, 'likeRoute']);
-    Route::delete('routes/{route}/like', [LikeController::class, 'unlikeRoute']);
-    Route::post('comments/{comment}/like', [LikeController::class, 'likeComment']);
-    Route::delete('comments/{comment}/like', [LikeController::class, 'unlikeComment']);
-
-// Публичные маршруты
-    Route::post('/register', [AuthController::class, 'register']);
-    Route::post('/login', [AuthController::class, 'login']);
-
-// Маршруты для рецептов
-    Route::get('/recipes', [RecipeController::class, 'index']);
-    Route::get('/recipes/{recipe}', [RecipeController::class, 'show']);
-    Route::get('/recipes/country/{country}', [RecipeController::class, 'byCountry']);
-    Route::get('/recipes/tag/{tag}', [RecipeController::class, 'byTag']);
-
-// Маршруты для маршрутов
-    Route::get('/routes', [RouteController::class, 'index']);
-    Route::get('/routes/{route}', [RouteController::class, 'show']);
-    Route::get('/routes/country/{country}', [RouteController::class, 'byCountry']);
-
-// Маршруты для тегов
-    Route::get('/tags', [TagController::class, 'index']);
-
-// Маршруты для поиска
-    Route::get('/search', [SearchController::class, 'search']);
-
-// Маршруты для статистики
-    Route::get('/stats', [StatsController::class, 'index']);
-    Route::get('/stats/countries', [StatsController::class, 'countries']);
-    Route::get('/stats/recipes', [StatsController::class, 'recipes']);
-    Route::get('/stats/routes', [StatsController::class, 'routes']);
-
-    // Рецепты
-    Route::post('/recipes', [RecipeController::class, 'store']);
-    Route::put('/recipes/{recipe}', [RecipeController::class, 'update']);
-    Route::delete('/recipes/{recipe}', [RecipeController::class, 'destroy']);
-
-    // Маршруты
-    Route::post('/routes', [RouteController::class, 'store']);
-    Route::put('/routes/{route}', [RouteController::class, 'update']);
-    Route::delete('/routes/{route}', [RouteController::class, 'destroy']);
-
-    // Избранное
-    Route::get('/favorites', [FavoriteController::class, 'index']);
-    Route::post('/favorites/recipes/{recipe}', [FavoriteController::class, 'addRecipe']);
-    Route::delete('/favorites/recipes/{recipe}', [FavoriteController::class, 'removeRecipe']);
-    Route::post('/favorites/routes/{route}', [FavoriteController::class, 'addRoute']);
-    Route::delete('/favorites/routes/{route}', [FavoriteController::class, 'removeRoute']);
-
-    // Лайки
-    Route::post('/likes/recipes/{recipe}', [LikeController::class, 'toggleRecipe']);
-    Route::post('/likes/routes/{route}', [LikeController::class, 'toggleRoute']);
-
-    // Комментарии
-    Route::get('/recipes/{recipe}/comments', [CommentController::class, 'recipeComments']);
-    Route::post('/recipes/{recipe}/comments', [CommentController::class, 'addRecipeComment']);
-    Route::get('/routes/{route}/comments', [CommentController::class, 'routeComments']);
-    Route::post('/routes/{route}/comments', [CommentController::class, 'addRouteComment']);
-    Route::delete('/comments/{comment}', [CommentController::class, 'destroy']);
-
-    // Загрузка файлов
-    Route::post('/upload/image', [UploadController::class, 'image']);
-    Route::delete('/upload/{path}', [UploadController::class, 'delete']);
 
