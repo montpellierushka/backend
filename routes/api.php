@@ -13,6 +13,7 @@ use App\Http\Controllers\UploadController;
 use App\Http\Controllers\StatsController;
 use App\Http\Controllers\CommentController;
 use App\Http\Controllers\LikeController;
+use App\Http\Controllers\MapController;
 
 /*
 |--------------------------------------------------------------------------
@@ -184,4 +185,19 @@ Route::prefix('telegram')->group(function () {
         Route::post('/recipe/{recipe}', [LikeController::class, 'store']);
         Route::delete('/recipe/{recipe}', [LikeController::class, 'destroy']);
     });
+
+// Маршруты для карты
+Route::prefix('map')->group(function () {
+    // Получение рецептов для карты с фильтрацией
+    Route::get('/recipes', [MapController::class, 'getRecipes']);
+    
+    // Получение доступных фильтров (страны, теги, время приготовления)
+    Route::get('/filters', [MapController::class, 'getFilters']);
+    
+    // Получение статистики по странам
+    Route::get('/stats', [MapController::class, 'getCountryStats']);
+    
+    // Получение детальной информации о рецепте
+    Route::get('/recipes/{id}', [MapController::class, 'getRecipeDetails']);
+});
 

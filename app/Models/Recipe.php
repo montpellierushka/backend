@@ -25,7 +25,9 @@ class Recipe extends Model
         'country_id',
         'image',
         'user_id',
-        'difficulty'
+        'difficulty',
+        'latitude',
+        'longitude'
     ];
 
     protected $appends = ['image_url', 'is_favorite'];
