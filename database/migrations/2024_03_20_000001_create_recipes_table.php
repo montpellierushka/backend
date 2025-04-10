@@ -12,8 +12,8 @@ return new class extends Migration
             $table->id();
             $table->string('title');
             $table->text('description');
-            $table->text('ingredients')->default('');
-            $table->text('instructions')->default('');
+            $table->text('ingredients')->nullable();
+            $table->text('instructions')->nullable();
             $table->integer('cooking_time');
             $table->integer('servings');
             $table->string('image')->nullable();
