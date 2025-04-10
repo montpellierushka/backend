@@ -12,12 +12,16 @@ return new class extends Migration
             $table->id();
             $table->string('title');
             $table->text('description');
+            $table->text('ingredients');
+            $table->text('instructions');
             $table->integer('cooking_time');
             $table->integer('servings');
             $table->string('image')->nullable();
             $table->string('difficulty')->default('medium');
-            $table->foreignId('country_id')->constrained()->onDelete('cascade');
-            $table->foreignId('user_id')->nullable()->constrained()->onDelete('cascade');
+            $table->decimal('latitude', 10, 8)->nullable();
+            $table->decimal('longitude', 11, 8)->nullable();
+            $table->foreignId('country_id')->constrained();
+            $table->foreignId('user_id')->constrained();
             $table->timestamps();
         });
     }
