@@ -32,6 +32,7 @@ Route::middleware('api')->group(function () {
     Route::get('/recipes/{recipe}', [RecipeController::class, 'show']);
     Route::get('/recipes/country/{country}', [RecipeController::class, 'byCountry']);
     Route::get('/recipes/tag/{tag}', [RecipeController::class, 'byTag']);
+    Route::post('/recipes', [RecipeController::class, 'store']);
 
     Route::get('/routes', [RouteController::class, 'index']);
     Route::get('/routes/{route}', [RouteController::class, 'show']);
@@ -77,7 +78,6 @@ Route::middleware('api')->group(function () {
 
     // Защищенные маршруты
     // Рецепты
-    Route::post('/recipes', [RecipeController::class, 'store']);
     Route::put('/recipes/{recipe}', [RecipeController::class, 'update']);
     Route::delete('/recipes/{recipe}', [RecipeController::class, 'destroy']);
 
