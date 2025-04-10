@@ -75,23 +75,21 @@ Route::post('/upload/image', [UploadController::class, 'image']);
 Route::delete('/upload/{path}', [UploadController::class, 'delete']);
 
 // Защищенные маршруты
-Route::middleware('auth:sanctum')->group(function () {
-    // Рецепты
-    Route::post('/recipes', [RecipeController::class, 'store']);
-    Route::put('/recipes/{recipe}', [RecipeController::class, 'update']);
-    Route::delete('/recipes/{recipe}', [RecipeController::class, 'destroy']);
+// Рецепты
+Route::post('/recipes', [RecipeController::class, 'store']);
+Route::put('/recipes/{recipe}', [RecipeController::class, 'update']);
+Route::delete('/recipes/{recipe}', [RecipeController::class, 'destroy']);
 
-    // Маршруты
-    Route::post('/routes', [RouteController::class, 'store']);
-    Route::put('/routes/{route}', [RouteController::class, 'update']);
-    Route::delete('/routes/{route}', [RouteController::class, 'destroy']);
+// Маршруты
+Route::post('/routes', [RouteController::class, 'store']);
+Route::put('/routes/{route}', [RouteController::class, 'update']);
+Route::delete('/routes/{route}', [RouteController::class, 'destroy']);
 
-    // Пользователи
-    Route::get('/users/profile', [UserController::class, 'profile']);
-    Route::put('/users/profile', [UserController::class, 'updateProfile']);
-    Route::get('/users/{user}/recipes', [UserController::class, 'recipes']);
-    Route::get('/users/{user}/routes', [UserController::class, 'routes']);
-});
+// Пользователи
+Route::get('/users/profile', [UserController::class, 'profile']);
+Route::put('/users/profile', [UserController::class, 'updateProfile']);
+Route::get('/users/{user}/recipes', [UserController::class, 'recipes']);
+Route::get('/users/{user}/routes', [UserController::class, 'routes']);
 
 // Маршруты для карты
 Route::prefix('map')->group(function () {
